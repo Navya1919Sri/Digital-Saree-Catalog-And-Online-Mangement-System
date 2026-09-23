@@ -2,8 +2,8 @@ from flask import Flask, render_template, request, redirect, url_for, session
 import sqlite3
 import os
 
-app = Flask(__name__)
 basedir = os.path.abspath(os.path.dirname(__file__))
+app = Flask(__name__, template_folder=os.path.join(basedir, 'templates'), static_folder=os.path.join(basedir, 'static'))
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + os.path.join(basedir, 'saree.db')
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 # Secret key for login sessions
