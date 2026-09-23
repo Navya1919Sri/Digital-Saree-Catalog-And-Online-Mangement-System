@@ -6,4 +6,4 @@ Jinja2==3.1.6
 itsdangerous==2.2.0
 MarkupSafe==3.0.3
 click==8.2.0
-gunicorn==21.2.0" | Out-File -Encoding ascii requirements.txt
+gunicorn==21.2.0" 
