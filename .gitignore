@@ -1,5 +1,1 @@
-*.db
-__pycache__/
-*.pyc
-static/images/
-
+﻿.gitignore file content
