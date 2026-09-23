@@ -1,0 +1,65 @@
+{% extends "base.html" %}
+{% block title %}
+Shopping Cart - Digital Saree
+{% endblock %}
+{% block content %}
+<section class="cart-page">
+    <h1>My Shopping Cart</h1>
+    {% if cart_items %}
+        <div class="cart-container">
+            {% for item in cart_items %}
+            <div class="cart-item">
+                <div class="cart-image">
+                    {% if item["image"] %}
+                        <img
+                            src="{{ url_for('static', filename='images/' + item['image']) }}"
+                            alt="{{ item['name'] }}"
+                        >
+                    {% else %}
+                        <div class="no-image">
+                            Saree
+                        </div>
+                    {% endif %}
+                </div>
+                <div class="cart-info">
+                    <h3>{{ item["name"] }}</h3>
+                    <p>
+                        Price: ₹{{ item["price"] }}
+                    </p>
+                    <p>
+                        Quantity: {{ item["quantity"] }}
+                    </p>
+                    <p class="cart-subtotal">
+                        Subtotal:
+                        ₹{{ item["price"] * item["quantity"] }}
+                    </p>
+                    <form method="POST" action="{{ url_for('remove_from_cart', cart_id=item['id']) }}">
+                        <button type="submit" class="remove-btn">
+                            Remove
+                        </button>
+                    </form>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        <div class="cart-summary">
+            <h2>
+                Total: ₹{{ total }}
+            </h2>
+            <a href="{{ url_for('checkout') }}" class="btn">
+                Proceed to Checkout
+            </a>
+        </div>
+    {% else %}
+        <div class="empty-cart">
+            <h2>Your cart is empty</h2>
+            <p>
+                Add some beautiful sarees to your cart.
+            </p>
+            <a href="{{ url_for('catalog') }}" class="btn">
+                Browse Sarees
+            </a>
+        </div>
+    {% endif %}
+</section>
+{% endblock %}

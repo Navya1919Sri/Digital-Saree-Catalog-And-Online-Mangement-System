@@ -1,0 +1,160 @@
+{% extends "base.html" %}
+
+{% block title %}
+Saree Catalog - Digital Saree
+{% endblock %}
+
+{% block content %}
+
+<section class="catalog-page">
+<h1>Our Saree Collection</h1>
+
+<p class="catalog-subtitle">
+    Explore our beautiful collection of sarees.
+</p>
+
+
+<!-- Search and Category Filter -->
+
+<form method="GET" action="/catalog" class="catalog-filter">
+
+    <input
+        type="text"
+        name="search"
+        placeholder="Search sarees..."
+        value="{{ search }}"
+    >
+
+    <select name="category">
+
+        <option value="">
+            All Categories
+        </option>
+
+        {% for category in categories %}
+
+            <option
+                value="{{ category['category'] }}"
+                {% if selected_category == category['category'] %}
+                    selected
+                {% endif %}
+            >
+                {{ category['category'] }}
+            </option>
+
+        {% endfor %}
+
+    </select>
+
+    <button type="submit" class="btn">
+        Search
+    </button>
+
+    <a href="/catalog" class="clear-filter">
+        Clear
+    </a>
+
+</form>
+
+
+<!-- Saree Collection -->
+
+<div class="catalog-container">
+
+    {% if sarees %}
+
+        {% for saree in sarees %}
+
+        <div class="saree-card">
+
+            <!-- Saree Image -->
+
+            <div class="saree-image">
+
+                {% if saree["image"] %}
+
+                    <img
+                        src="{{ url_for('static', filename='images/' + saree['image']) }}"
+                        alt="{{ saree['name'] }}"
+                    >
+
+                {% else %}
+
+                    <div class="no-image">
+                        Saree Image
+                    </div>
+
+                {% endif %}
+
+            </div>
+
+
+            <!-- Saree Information -->
+
+            <div class="saree-info">
+
+                <h3>
+                    {{ saree["name"] }}
+                </h3>
+
+                <p>
+                    Category:
+                    {{ saree["category"] }}
+                </p>
+
+                <p>
+                    Fabric:
+                    {{ saree["fabric"] }}
+                </p>
+
+                <p class="price">
+                    ₹{{ saree["price"] }}
+                </p>
+
+                <p>
+                    Stock:
+                    {{ saree["stock"] }}
+                </p>
+
+                <a
+                    href="/saree/{{ saree['id'] }}"
+                    class="btn"
+                >
+                    View Details
+                </a>
+
+            </div>
+
+        </div>
+
+        {% endfor %}
+
+
+    {% else %}
+
+        <div class="empty-catalog">
+
+            <h2>
+                No Sarees Found
+            </h2>
+
+            <p>
+                Try a different search or category.
+            </p>
+
+            <a
+                href="/catalog"
+                class="btn"
+            >
+                View All Sarees
+            </a>
+
+        </div>
+
+    {% endif %}
+
+</div>
+
+</section>
+
+{% endblock %}

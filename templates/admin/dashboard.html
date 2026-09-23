@@ -1,0 +1,165 @@
+{% extends "base.html" %}
+
+{% block title %}
+Admin Dashboard - Digital Saree
+{% endblock %}
+
+{% block content %}
+
+<section class="admin-dashboard">
+<div class="admin-dashboard-header">
+
+    <h1>Admin Dashboard</h1>
+
+    <p>
+        Manage your Digital Saree store.
+    </p>
+
+</div>
+
+
+<!-- Dashboard Statistics -->
+
+<div class="dashboard-stats">
+
+    <div class="stat-card">
+
+        <div class="stat-icon">
+            🥻
+        </div>
+
+        <h3>Total Sarees</h3>
+
+        <p class="stat-number">
+            {{ saree_count }}
+        </p>
+
+    </div>
+
+
+    <div class="stat-card">
+
+        <div class="stat-icon">
+            👥
+        </div>
+
+        <h3>Customers</h3>
+
+        <p class="stat-number">
+            {{ customer_count }}
+        </p>
+
+    </div>
+
+
+    <div class="stat-card">
+
+        <div class="stat-icon">
+            📦
+        </div>
+
+        <h3>Total Orders</h3>
+
+        <p class="stat-number">
+            {{ order_count }}
+        </p>
+
+    </div>
+
+
+    <div class="stat-card">
+
+        <div class="stat-icon">
+            ⏳
+        </div>
+
+        <h3>Pending Orders</h3>
+
+        <p class="stat-number">
+            {{ pending_orders }}
+        </p>
+
+    </div>
+
+</div>
+
+
+<!-- Admin Actions -->
+
+<div class="admin-actions">
+
+    <h2>Quick Actions</h2>
+
+
+    <div class="admin-action-grid">
+
+        <a
+            href="/admin/sarees"
+            class="admin-action-card"
+        >
+
+            <span>🥻</span>
+
+            <h3>Manage Sarees</h3>
+
+            <p>
+                Add, edit and delete sarees.
+            </p>
+
+        </a>
+
+
+        <a
+            href="/admin/sarees/add"
+            class="admin-action-card"
+        >
+
+            <span>➕</span>
+
+            <h3>Add Saree</h3>
+
+            <p>
+                Add a new saree to the catalog.
+            </p>
+
+        </a>
+
+
+        <a
+            href="/admin/orders"
+            class="admin-action-card"
+        >
+
+            <span>📦</span>
+
+            <h3>Manage Orders</h3>
+
+            <p>
+                View and update customer orders.
+            </p>
+
+        </a>
+
+
+        <a
+            href="/catalog"
+            class="admin-action-card"
+        >
+
+            <span>👀</span>
+
+            <h3>View Catalog</h3>
+
+            <p>
+                View the customer saree catalog.
+            </p>
+
+        </a>
+
+    </div>
+
+</div>
+
+</section>
+
+{% endblock %}

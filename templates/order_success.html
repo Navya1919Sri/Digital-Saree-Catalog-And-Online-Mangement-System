@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+
+{% block title %}
+Order Successful - Digital Saree
+{% endblock %}
+
+{% block content %}
+
+<section class="success-page">
+
+    <div class="success-box">
+
+        <div class="success-icon">
+            ✓
+        </div>
+
+        <h1>Order Placed Successfully!</h1>
+
+        <p>
+            Thank you for shopping with Digital Saree.
+        </p>
+
+        <h2>
+            Order #{{ order["id"] }}
+        </h2>
+
+        <p>
+            Total Amount:
+            <strong>₹{{ order["total_amount"] }}</strong>
+        </p>
+
+        <p>
+            Status:
+            <strong>{{ order["status"] }}</strong>
+        </p>
+
+        <div class="success-buttons">
+
+            <a href="/orders" class="btn">
+                View My Orders
+            </a>
+
+            <a href="/catalog" class="btn">
+                Continue Shopping
+            </a>
+
+        </div>
+
+    </div>
+
+</section>
+
+{% endblock %}

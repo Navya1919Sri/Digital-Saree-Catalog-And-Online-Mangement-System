@@ -1,0 +1,125 @@
+{% extends "base.html" %}
+
+{% block title %}
+My Orders - Digital Saree
+{% endblock %}
+
+{% block content %}
+
+<section class="orders-page">
+
+    <h1>My Orders</h1>
+
+    {% if orders %}
+
+        <div class="orders-container">
+
+            {% for order in orders %}
+
+            <div class="order-card">
+
+                <div class="order-header">
+
+                    <h2>
+                        Order #{{ order["id"] }}
+                    </h2>
+
+                    <span class="order-status">
+                        {{ order["status"] }}
+                    </span>
+
+                </div>
+
+
+                <div class="ordered-items">
+
+                    <h3>Items Ordered</h3>
+
+                    {% for item in order_items[order["id"]] %}
+
+                    <div class="ordered-item">
+
+                        <div class="ordered-item-image">
+
+                            {% if item["image"] %}
+
+                                <img
+                                    src="{{ url_for('static', filename='images/' + item['image']) }}"
+                                    alt="{{ item['name'] }}"
+                                >
+
+                            {% else %}
+
+                                <span>No Image</span>
+
+                            {% endif %}
+
+                        </div>
+
+
+                        <div class="ordered-item-info">
+
+                            <h4>
+                                {{ item["name"] }}
+                            </h4>
+
+                            <p>
+                                Quantity:
+                                {{ item["quantity"] }}
+                            </p>
+
+                            <p>
+                                Price:
+                                ₹{{ item["price"] }}
+                            </p>
+
+                        </div>
+
+                    </div>
+
+                    {% endfor %}
+
+                </div>
+
+
+                <div class="order-details">
+
+                    <p>
+                        <strong>Total Amount:</strong>
+                        ₹{{ order["total_amount"] }}
+                    </p>
+
+                    <p>
+                        <strong>Delivery Address:</strong>
+                        {{ order["delivery_address"] }}
+                    </p>
+
+                </div>
+
+            </div>
+
+            {% endfor %}
+
+        </div>
+
+    {% else %}
+
+        <div class="no-orders">
+
+            <h2>No Orders Yet</h2>
+
+            <p>
+                You haven't placed any orders yet.
+            </p>
+
+            <a href="/catalog" class="btn">
+                Browse Sarees
+            </a>
+
+        </div>
+
+    {% endif %}
+
+</section>
+
+{% endblock %}

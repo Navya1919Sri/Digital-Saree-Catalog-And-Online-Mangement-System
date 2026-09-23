@@ -1,0 +1,107 @@
+{% extends "base.html" %}
+
+{% block title %}
+{{ saree["name"] }} - Digital Saree
+{% endblock %}
+
+{% block content %}
+
+<section class="details-page">
+
+    <div class="details-container">
+
+        <!-- Saree Image -->
+
+        <div class="details-image">
+
+            {% if saree["image"] %}
+
+                <img
+                    src="{{ url_for('static', filename='images/' + saree['image']) }}"
+                    alt="{{ saree['name'] }}"
+                >
+
+            {% else %}
+
+                <div class="large-no-image">
+                    Saree Image
+                </div>
+
+            {% endif %}
+
+        </div>
+
+
+        <!-- Saree Information -->
+
+        <div class="details-info">
+
+            <h1>{{ saree["name"] }}</h1>
+
+            <p class="details-price">
+                ₹{{ saree["price"] }}
+            </p>
+
+            <p>
+                <strong>Category:</strong>
+                {{ saree["category"] }}
+            </p>
+
+            <p>
+                <strong>Fabric:</strong>
+                {{ saree["fabric"] }}
+            </p>
+
+            <p>
+                <strong>Color:</strong>
+                {{ saree["color"] }}
+            </p>
+
+            <p>
+                <strong>Available Stock:</strong>
+                {{ saree["stock"] }}
+            </p>
+
+            <p class="description">
+                {{ saree["description"] }}
+            </p>
+
+
+            {% if saree["stock"] > 0 %}
+
+            <form method="POST" action="/add-to-cart/{{ saree['id'] }}">
+
+                <label for="quantity">
+                    Quantity:
+                </label>
+
+                <input
+                    type="number"
+                    id="quantity"
+                    name="quantity"
+                    value="1"
+                    min="1"
+                    max="{{ saree['stock'] }}"
+                >
+
+                <button type="submit" class="btn">
+                    Add to Cart
+                </button>
+
+            </form>
+
+            {% else %}
+
+                <p class="out-of-stock">
+                    Out of Stock
+                </p>
+
+            {% endif %}
+
+        </div>
+
+    </div>
+
+</section>
+
+{% endblock %}

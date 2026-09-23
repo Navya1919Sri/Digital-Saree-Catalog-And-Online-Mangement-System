@@ -1,0 +1,122 @@
+{% extends "base.html" %}
+
+{% block title %}
+Manage Sarees - Admin
+{% endblock %}
+
+{% block content %}
+
+<section class="admin-sarees-page">
+
+    <div class="admin-title">
+
+        <div>
+            <h1>Manage Sarees</h1>
+            <p>View and manage your saree catalog.</p>
+        </div>
+
+        <a href="/admin/sarees/add" class="btn">
+            + Add Saree
+        </a>
+
+    </div>
+
+
+    {% if sarees %}
+
+    <div class="admin-table-container">
+
+        <table class="admin-table">
+
+            <thead>
+
+                <tr>
+                    <th>ID</th>
+                    <th>Saree</th>
+                    <th>Category</th>
+                    <th>Fabric</th>
+                    <th>Price</th>
+                    <th>Stock</th>
+                    <th>Actions</th>
+                </tr>
+
+            </thead>
+
+            <tbody>
+
+                {% for saree in sarees %}
+
+                <tr>
+
+                    <td>
+                        {{ saree["id"] }}
+                    </td>
+
+                    <td>
+                        {{ saree["name"] }}
+                    </td>
+
+                    <td>
+                        {{ saree["category"] }}
+                    </td>
+
+                    <td>
+                        {{ saree["fabric"] }}
+                    </td>
+
+                    <td>
+                        ₹{{ saree["price"] }}
+                    </td>
+
+                    <td>
+                        {{ saree["stock"] }}
+                    </td>
+
+                    <td>
+
+                        <a
+                            href="/admin/sarees/edit/{{ saree['id'] }}"
+                            class="edit-btn"
+                        >
+                            Edit
+                        </a>
+
+                        <a
+                            href="/admin/sarees/delete/{{ saree['id'] }}"
+                            class="delete-btn"
+                            onclick="return confirm('Are you sure you want to delete this saree?')"
+                        >
+                            Delete
+                        </a>
+
+                    </td>
+
+                </tr>
+
+                {% endfor %}
+
+            </tbody>
+
+        </table>
+
+    </div>
+
+    {% else %}
+
+    <div class="empty-admin">
+
+        <h2>No Sarees Found</h2>
+
+        <p>Add your first saree to the catalog.</p>
+
+        <a href="/admin/sarees/add" class="btn">
+            Add Saree
+        </a>
+
+    </div>
+
+    {% endif %}
+
+</section>
+
+{% endblock %}

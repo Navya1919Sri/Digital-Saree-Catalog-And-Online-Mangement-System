@@ -1,0 +1,80 @@
+{% extends "base.html" %}
+
+{% block title %}
+Checkout - Digital Saree
+{% endblock %}
+
+{% block content %}
+
+<section class="checkout-page">
+
+    <h1>Checkout</h1>
+
+    <div class="checkout-container">
+
+        <div class="order-summary">
+
+            <h2>Order Summary</h2>
+
+            {% for item in cart_items %}
+
+            <div class="checkout-item">
+
+                <div>
+                    <h3>{{ item["name"] }}</h3>
+
+                    <p>
+                        Quantity:
+                        {{ item["quantity"] }}
+                    </p>
+                </div>
+
+                <div>
+                    ₹{{ item["price"] * item["quantity"] }}
+                </div>
+
+            </div>
+
+            {% endfor %}
+
+            <hr>
+
+            <h2 class="checkout-total">
+                Total: ₹{{ total }}
+            </h2>
+
+        </div>
+
+
+        <div class="address-section">
+
+            <h2>Delivery Address</h2>
+
+            <form method="POST">
+
+                <label>
+                    Full Delivery Address
+                </label>
+
+                <textarea
+                    name="address"
+                    required
+                    placeholder="Enter your complete delivery address"
+                ></textarea>
+
+                <button
+                    type="submit"
+                    class="btn"
+                >
+                    Place Order
+                </button>
+
+            </form>
+
+        </div>
+
+    </div>
+
+</section>
+
+{% endblock %}
