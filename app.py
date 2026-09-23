@@ -19,8 +19,7 @@ os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 # -----------------------------
 def get_db_connection():
     connection = psycopg2.connect(
-        os.environ["DATABASE_URL"],
-        cursor_factory=RealDictCursor
+        os.environ["DATABASE_URL"]
     )
     return connection
 
@@ -29,7 +28,7 @@ def get_db_connection():
 # -----------------------------
 @app.route("/")
 def home():
-    return render_template("index.html")
+    return redirect(url_for("catalog"))
 
 # -----------------------------
 # REGISTER
@@ -44,9 +43,10 @@ def register():
         address = request.form["address"]
 
         connection = get_db_connection()
+        cursor = connection.cursor()
 
         try:
-            connection.execute("""
+            cursor.execute("""
                 INSERT INTO users
                 (name, email, password, phone, address, role)
                 VALUES (%s, %s, %s, %s, %s, %s)
@@ -62,10 +62,13 @@ def register():
 
         except psycopg2.errors.UniqueViolation:
             connection.rollback()
+            cursor.close()
             connection.close()
             return "Email already registered!"
 
+        cursor.close()
         connection.close()
+
         return redirect(url_for("login"))
 
     return render_template("register.html")
@@ -80,16 +83,20 @@ def login():
         password = request.form["password"]
 
         connection = get_db_connection()
+        cursor = connection.cursor(cursor_factory=RealDictCursor)
 
-        user = connection.execute("""
+        cursor.execute("""
             SELECT *
             FROM users
             WHERE email = %s AND password = %s
         """, (
             email,
             password
-        )).fetchone()
+        ))
 
+        user = cursor.fetchone()
+
+        cursor.close()
         connection.close()
 
         if user:
@@ -118,6 +125,7 @@ def catalog():
     category = request.args.get("category", "")
 
     connection = get_db_connection()
+    cursor = connection.cursor(cursor_factory=RealDictCursor)
 
     query = """
         SELECT *
@@ -150,19 +158,24 @@ def catalog():
 
     query += " ORDER BY id DESC"
 
-    sarees = connection.execute(
+    cursor.execute(
         query,
         params
-    ).fetchall()
+    )
 
-    categories = connection.execute("""
+    sarees = cursor.fetchall()
+
+    cursor.execute("""
         SELECT DISTINCT category
         FROM sarees
         WHERE category IS NOT NULL
         AND category != ''
         ORDER BY category
-    """).fetchall()
+    """)
 
+    categories = cursor.fetchall()
+
+    cursor.close()
     connection.close()
 
     return render_template(
@@ -179,15 +192,19 @@ def catalog():
 @app.route("/saree/<int:saree_id>")
 def saree_details(saree_id):
     connection = get_db_connection()
+    cursor = connection.cursor(cursor_factory=RealDictCursor)
 
-    saree = connection.execute("""
+    cursor.execute("""
         SELECT *
         FROM sarees
         WHERE id = %s
     """, (
         saree_id,
-    )).fetchone()
+    ))
 
+    saree = cursor.fetchone()
+
+    cursor.close()
     connection.close()
 
     if saree is None:
@@ -210,43 +227,51 @@ def add_to_cart(saree_id):
     quantity = int(request.form["quantity"])
 
     connection = get_db_connection()
+    cursor = connection.cursor(cursor_factory=RealDictCursor)
 
     # Check saree exists and get stock
-    saree = connection.execute("""
+    cursor.execute("""
         SELECT *
         FROM sarees
         WHERE id = %s
     """, (
         saree_id,
-    )).fetchone()
+    ))
+
+    saree = cursor.fetchone()
 
     if saree is None:
+        cursor.close()
         connection.close()
         return "Saree not found!"
 
     # Check stock
     if quantity > saree["stock"]:
+        cursor.close()
         connection.close()
         return "Not enough stock available!"
 
     # Check whether saree is already in cart
-    existing_item = connection.execute("""
+    cursor.execute("""
         SELECT *
         FROM cart
         WHERE user_id = %s AND saree_id = %s
     """, (
         session["user_id"],
         saree_id
-    )).fetchone()
+    ))
+
+    existing_item = cursor.fetchone()
 
     if existing_item:
         new_quantity = existing_item["quantity"] + quantity
 
         if new_quantity > saree["stock"]:
+            cursor.close()
             connection.close()
             return "Not enough stock available!"
 
-        connection.execute("""
+        cursor.execute("""
             UPDATE cart
             SET quantity = %s
             WHERE id = %s
@@ -256,7 +281,7 @@ def add_to_cart(saree_id):
         ))
 
     else:
-        connection.execute("""
+        cursor.execute("""
             INSERT INTO cart
             (user_id, saree_id, quantity)
             VALUES (%s, %s, %s)
@@ -267,6 +292,8 @@ def add_to_cart(saree_id):
         ))
 
     connection.commit()
+
+    cursor.close()
     connection.close()
 
     return redirect(url_for("cart"))
@@ -281,8 +308,9 @@ def cart():
         return redirect(url_for("login"))
 
     connection = get_db_connection()
+    cursor = connection.cursor(cursor_factory=RealDictCursor)
 
-    cart_items = connection.execute("""
+    cursor.execute("""
         SELECT
             cart.id,
             cart.quantity,
@@ -295,8 +323,11 @@ def cart():
         WHERE cart.user_id = %s
     """, (
         session["user_id"],
-    )).fetchall()
+    ))
 
+    cart_items = cursor.fetchall()
+
+    cursor.close()
     connection.close()
 
     total = 0
@@ -320,8 +351,9 @@ def remove_from_cart(cart_id):
         return redirect(url_for("login"))
 
     connection = get_db_connection()
+    cursor = connection.cursor()
 
-    connection.execute("""
+    cursor.execute("""
         DELETE FROM cart
         WHERE id = %s AND user_id = %s
     """, (
@@ -330,6 +362,8 @@ def remove_from_cart(cart_id):
     ))
 
     connection.commit()
+
+    cursor.close()
     connection.close()
 
     return redirect(url_for("cart"))
@@ -344,9 +378,10 @@ def checkout():
         return redirect(url_for("login"))
 
     connection = get_db_connection()
+    cursor = connection.cursor(cursor_factory=RealDictCursor)
 
     # Get cart items
-    cart_items = connection.execute("""
+    cursor.execute("""
         SELECT
             cart.id,
             cart.saree_id,
@@ -360,10 +395,13 @@ def checkout():
         WHERE cart.user_id = %s
     """, (
         session["user_id"],
-    )).fetchall()
+    ))
+
+    cart_items = cursor.fetchall()
 
     # Empty cart
     if not cart_items:
+        cursor.close()
         connection.close()
         return redirect(url_for("cart"))
 
@@ -382,6 +420,7 @@ def checkout():
         # Check stock before placing order
         for item in cart_items:
             if item["quantity"] > item["stock"]:
+                cursor.close()
                 connection.close()
 
                 return (
@@ -390,7 +429,7 @@ def checkout():
                 )
 
         # Create order
-        cursor = connection.execute("""
+        cursor.execute("""
             INSERT INTO orders
             (user_id, total_amount, status, delivery_address)
             VALUES (%s, %s, %s, %s)
@@ -406,7 +445,7 @@ def checkout():
 
         # Add order items
         for item in cart_items:
-            connection.execute("""
+            cursor.execute("""
                 INSERT INTO order_items
                 (order_id, saree_id, quantity, price)
                 VALUES (%s, %s, %s, %s)
@@ -418,7 +457,7 @@ def checkout():
             ))
 
             # Reduce stock
-            connection.execute("""
+            cursor.execute("""
                 UPDATE sarees
                 SET stock = stock - %s
                 WHERE id = %s
@@ -428,7 +467,7 @@ def checkout():
             ))
 
         # Clear user's cart
-        connection.execute("""
+        cursor.execute("""
             DELETE FROM cart
             WHERE user_id = %s
         """, (
@@ -436,6 +475,8 @@ def checkout():
         ))
 
         connection.commit()
+
+        cursor.close()
         connection.close()
 
         return redirect(
@@ -445,6 +486,7 @@ def checkout():
             )
         )
 
+    cursor.close()
     connection.close()
 
     return render_template(
@@ -462,16 +504,20 @@ def order_success(order_id):
         return redirect(url_for("login"))
 
     connection = get_db_connection()
+    cursor = connection.cursor(cursor_factory=RealDictCursor)
 
-    order = connection.execute("""
+    cursor.execute("""
         SELECT *
         FROM orders
         WHERE id = %s AND user_id = %s
     """, (
         order_id,
         session["user_id"]
-    )).fetchone()
+    ))
 
+    order = cursor.fetchone()
+
+    cursor.close()
     connection.close()
 
     if order is None:
@@ -494,29 +540,35 @@ def admin_dashboard():
         return "Access denied!"
 
     connection = get_db_connection()
+    cursor = connection.cursor(cursor_factory=RealDictCursor)
 
-    saree_count = connection.execute("""
+    cursor.execute("""
         SELECT COUNT(*) AS count
         FROM sarees
-    """).fetchone()["count"]
+    """)
+    saree_count = cursor.fetchone()["count"]
 
-    customer_count = connection.execute("""
+    cursor.execute("""
         SELECT COUNT(*) AS count
         FROM users
         WHERE role = 'customer'
-    """).fetchone()["count"]
+    """)
+    customer_count = cursor.fetchone()["count"]
 
-    order_count = connection.execute("""
+    cursor.execute("""
         SELECT COUNT(*) AS count
         FROM orders
-    """).fetchone()["count"]
+    """)
+    order_count = cursor.fetchone()["count"]
 
-    pending_orders = connection.execute("""
+    cursor.execute("""
         SELECT COUNT(*) AS count
         FROM orders
         WHERE status = 'Pending'
-    """).fetchone()["count"]
+    """)
+    pending_orders = cursor.fetchone()["count"]
 
+    cursor.close()
     connection.close()
 
     return render_template(
@@ -544,20 +596,23 @@ def my_orders():
         return redirect(url_for("login"))
 
     connection = get_db_connection()
+    cursor = connection.cursor(cursor_factory=RealDictCursor)
 
-    orders = connection.execute("""
+    cursor.execute("""
         SELECT *
         FROM orders
         WHERE user_id = %s
         ORDER BY id DESC
     """, (
         session["user_id"],
-    )).fetchall()
+    ))
+
+    orders = cursor.fetchall()
 
     order_items = {}
 
     for order in orders:
-        items = connection.execute("""
+        cursor.execute("""
             SELECT
                 order_items.quantity,
                 order_items.price,
@@ -569,10 +624,13 @@ def my_orders():
             WHERE order_items.order_id = %s
         """, (
             order["id"],
-        )).fetchall()
+        ))
+
+        items = cursor.fetchall()
 
         order_items[order["id"]] = items
 
+    cursor.close()
     connection.close()
 
     return render_template(
@@ -594,13 +652,17 @@ def admin_sarees():
         return "Access denied!"
 
     connection = get_db_connection()
+    cursor = connection.cursor(cursor_factory=RealDictCursor)
 
-    sarees = connection.execute("""
+    cursor.execute("""
         SELECT *
         FROM sarees
         ORDER BY id DESC
-    """).fetchall()
+    """)
 
+    sarees = cursor.fetchall()
+
+    cursor.close()
     connection.close()
 
     return render_template(
@@ -644,8 +706,9 @@ def add_saree():
             )
 
         connection = get_db_connection()
+        cursor = connection.cursor()
 
-        connection.execute("""
+        cursor.execute("""
             INSERT INTO sarees
             (name, category, fabric, color, price, stock, description, image)
             VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
@@ -661,6 +724,8 @@ def add_saree():
         ))
 
         connection.commit()
+
+        cursor.close()
         connection.close()
 
         return redirect(url_for("admin_sarees"))
@@ -680,16 +745,20 @@ def edit_saree(saree_id):
         return "Access denied!"
 
     connection = get_db_connection()
+    cursor = connection.cursor(cursor_factory=RealDictCursor)
 
-    saree = connection.execute("""
+    cursor.execute("""
         SELECT *
         FROM sarees
         WHERE id = %s
     """, (
         saree_id,
-    )).fetchone()
+    ))
+
+    saree = cursor.fetchone()
 
     if saree is None:
+        cursor.close()
         connection.close()
         return "Saree not found!"
 
@@ -703,7 +772,7 @@ def edit_saree(saree_id):
         stock = request.form["stock"]
         description = request.form["description"]
 
-        connection.execute("""
+        cursor.execute("""
             UPDATE sarees
             SET
                 name = %s,
@@ -726,10 +795,13 @@ def edit_saree(saree_id):
         ))
 
         connection.commit()
+
+        cursor.close()
         connection.close()
 
         return redirect(url_for("admin_sarees"))
 
+    cursor.close()
     connection.close()
 
     return render_template(
@@ -750,20 +822,24 @@ def delete_saree(saree_id):
         return "Access denied!"
 
     connection = get_db_connection()
+    cursor = connection.cursor(cursor_factory=RealDictCursor)
 
-    saree = connection.execute("""
+    cursor.execute("""
         SELECT *
         FROM sarees
         WHERE id = %s
     """, (
         saree_id,
-    )).fetchone()
+    ))
+
+    saree = cursor.fetchone()
 
     if saree is None:
+        cursor.close()
         connection.close()
         return "Saree not found!"
 
-    connection.execute("""
+    cursor.execute("""
         DELETE FROM sarees
         WHERE id = %s
     """, (
@@ -771,6 +847,8 @@ def delete_saree(saree_id):
     ))
 
     connection.commit()
+
+    cursor.close()
     connection.close()
 
     return redirect(url_for("admin_sarees"))
@@ -787,8 +865,9 @@ def admin_orders():
         return "Access denied!"
 
     connection = get_db_connection()
+    cursor = connection.cursor(cursor_factory=RealDictCursor)
 
-    orders = connection.execute("""
+    cursor.execute("""
         SELECT
             orders.id,
             orders.total_amount,
@@ -800,12 +879,14 @@ def admin_orders():
         JOIN users
         ON orders.user_id = users.id
         ORDER BY orders.id DESC
-    """).fetchall()
+    """)
+
+    orders = cursor.fetchall()
 
     order_items = {}
 
     for order in orders:
-        items = connection.execute("""
+        cursor.execute("""
             SELECT
                 order_items.quantity,
                 order_items.price,
@@ -817,10 +898,13 @@ def admin_orders():
             WHERE order_items.order_id = %s
         """, (
             order["id"],
-        )).fetchall()
+        ))
+
+        items = cursor.fetchall()
 
         order_items[order["id"]] = items
 
+    cursor.close()
     connection.close()
 
     return render_template(
@@ -834,7 +918,7 @@ def admin_orders():
 # -----------------------------
 @app.route("/admin/orders/update/<int:order_id>", methods=["POST"])
 def update_order_status(order_id):
-    # Check admin login
+    # Check login
     if "user_id" not in session:
         return redirect(url_for("login"))
 
@@ -856,8 +940,9 @@ def update_order_status(order_id):
         return "Invalid order status!"
 
     connection = get_db_connection()
+    cursor = connection.cursor()
 
-    connection.execute("""
+    cursor.execute("""
         UPDATE orders
         SET status = %s
         WHERE id = %s
@@ -867,6 +952,8 @@ def update_order_status(order_id):
     ))
 
     connection.commit()
+
+    cursor.close()
     connection.close()
 
     return redirect(url_for("admin_orders"))
