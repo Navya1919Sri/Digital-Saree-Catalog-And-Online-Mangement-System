@@ -2,10 +2,13 @@ from flask import Flask, render_template, request, redirect, url_for, session
 import sqlite3
 import os
 
-app = Flask(__name__, template_folder='templates', static_folder='static')
+app = Flask(__name__)
+basedir = os.path.abspath(os.path.dirname(__file__))
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + os.path.join(basedir, 'saree.db')
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 # Secret key for login sessions
 app.secret_key = "digital_saree_secret_key"
-UPLOAD_FOLDER = "static/images"
+UPLOAD_FOLDER = os.path.join(basedir, "static", "images")
 app.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
@@ -13,7 +16,7 @@ os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 # DATABASE CONNECTION
 # -----------------------------
 def get_db_connection():
-    connection = sqlite3.connect("database.db")
+    connection = sqlite3.connect(os.path.join(basedir, "database.db"))
     connection.row_factory = sqlite3.Row
     return connection
 
