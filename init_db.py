@@ -8,10 +8,12 @@ connection = psycopg2.connect(
     os.environ["DATABASE_URL"]
 )
 
+cursor = connection.cursor()
+
 # -----------------------------
 # CREATE USERS TABLE
 # -----------------------------
-connection.execute("""
+cursor.execute("""
     CREATE TABLE IF NOT EXISTS users (
         id SERIAL PRIMARY KEY,
         name TEXT NOT NULL,
@@ -26,7 +28,7 @@ connection.execute("""
 # -----------------------------
 # CREATE SAREES TABLE
 # -----------------------------
-connection.execute("""
+cursor.execute("""
     CREATE TABLE IF NOT EXISTS sarees (
         id SERIAL PRIMARY KEY,
         name TEXT NOT NULL,
@@ -43,7 +45,7 @@ connection.execute("""
 # -----------------------------
 # CREATE CART TABLE
 # -----------------------------
-connection.execute("""
+cursor.execute("""
     CREATE TABLE IF NOT EXISTS cart (
         id SERIAL PRIMARY KEY,
         user_id INTEGER NOT NULL,
@@ -57,7 +59,7 @@ connection.execute("""
 # -----------------------------
 # CREATE ORDERS TABLE
 # -----------------------------
-connection.execute("""
+cursor.execute("""
     CREATE TABLE IF NOT EXISTS orders (
         id SERIAL PRIMARY KEY,
         user_id INTEGER NOT NULL,
@@ -72,7 +74,7 @@ connection.execute("""
 # -----------------------------
 # CREATE ORDER ITEMS TABLE
 # -----------------------------
-connection.execute("""
+cursor.execute("""
     CREATE TABLE IF NOT EXISTS order_items (
         id SERIAL PRIMARY KEY,
         order_id INTEGER NOT NULL,
@@ -87,14 +89,16 @@ connection.execute("""
 # -----------------------------
 # CREATE ADMIN USER
 # -----------------------------
-admin_count = connection.execute("""
+cursor.execute("""
     SELECT COUNT(*)
     FROM users
     WHERE role = 'admin'
-""").fetchone()[0]
+""")
+
+admin_count = cursor.fetchone()[0]
 
 if admin_count == 0:
-    connection.execute("""
+    cursor.execute("""
         INSERT INTO users
         (name, email, password, role)
         VALUES (%s, %s, %s, %s)
@@ -108,13 +112,16 @@ if admin_count == 0:
 # -----------------------------
 # ADD DEFAULT SAREES
 # -----------------------------
-saree_count = connection.execute("""
+cursor.execute("""
     SELECT COUNT(*)
     FROM sarees
-""").fetchone()[0]
+""")
+
+saree_count = cursor.fetchone()[0]
 
 if saree_count == 0:
-    connection.execute("""
+
+    cursor.execute("""
         INSERT INTO sarees
         (name, category, fabric, color, price, stock, description, image)
         VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
@@ -129,7 +136,7 @@ if saree_count == 0:
         ""
     ))
 
-    connection.execute("""
+    cursor.execute("""
         INSERT INTO sarees
         (name, category, fabric, color, price, stock, description, image)
         VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
@@ -144,7 +151,7 @@ if saree_count == 0:
         ""
     ))
 
-    connection.execute("""
+    cursor.execute("""
         INSERT INTO sarees
         (name, category, fabric, color, price, stock, description, image)
         VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
@@ -159,7 +166,12 @@ if saree_count == 0:
         ""
     ))
 
+# -----------------------------
+# SAVE CHANGES
+# -----------------------------
 connection.commit()
+
+cursor.close()
 connection.close()
 
 print("PostgreSQL database initialized successfully!")
