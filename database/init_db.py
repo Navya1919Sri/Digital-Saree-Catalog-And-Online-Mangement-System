@@ -1,17 +1,19 @@
-import sqlite3
+import psycopg2
 import os
 
-basedir = os.path.abspath(os.path.dirname(__file__))
-database = os.path.join(basedir, "database.db")
-
-connection = sqlite3.connect(database)
+# -----------------------------
+# DATABASE CONNECTION
+# -----------------------------
+connection = psycopg2.connect(
+    os.environ["DATABASE_URL"]
+)
 
 # -----------------------------
 # CREATE USERS TABLE
 # -----------------------------
 connection.execute("""
     CREATE TABLE IF NOT EXISTS users (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        id SERIAL PRIMARY KEY,
         name TEXT NOT NULL,
         email TEXT UNIQUE NOT NULL,
         password TEXT NOT NULL,
@@ -26,7 +28,7 @@ connection.execute("""
 # -----------------------------
 connection.execute("""
     CREATE TABLE IF NOT EXISTS sarees (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        id SERIAL PRIMARY KEY,
         name TEXT NOT NULL,
         category TEXT NOT NULL,
         fabric TEXT,
@@ -43,7 +45,7 @@ connection.execute("""
 # -----------------------------
 connection.execute("""
     CREATE TABLE IF NOT EXISTS cart (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        id SERIAL PRIMARY KEY,
         user_id INTEGER NOT NULL,
         saree_id INTEGER NOT NULL,
         quantity INTEGER NOT NULL DEFAULT 1,
@@ -57,9 +59,9 @@ connection.execute("""
 # -----------------------------
 connection.execute("""
     CREATE TABLE IF NOT EXISTS orders (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        id SERIAL PRIMARY KEY,
         user_id INTEGER NOT NULL,
-        order_date DATETIME DEFAULT CURRENT_TIMESTAMP,
+        order_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         total_amount REAL NOT NULL,
         status TEXT DEFAULT 'Pending',
         delivery_address TEXT NOT NULL,
@@ -72,7 +74,7 @@ connection.execute("""
 # -----------------------------
 connection.execute("""
     CREATE TABLE IF NOT EXISTS order_items (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        id SERIAL PRIMARY KEY,
         order_id INTEGER NOT NULL,
         saree_id INTEGER NOT NULL,
         quantity INTEGER NOT NULL,
@@ -85,14 +87,17 @@ connection.execute("""
 # -----------------------------
 # CREATE ADMIN USER
 # -----------------------------
-admin_count = connection.execute(
-    "SELECT COUNT(*) FROM users WHERE role = 'admin'"
-).fetchone()[0]
+admin_count = connection.execute("""
+    SELECT COUNT(*)
+    FROM users
+    WHERE role = 'admin'
+""").fetchone()[0]
 
 if admin_count == 0:
     connection.execute("""
-        INSERT INTO users (name, email, password, role)
-        VALUES (?, ?, ?, ?)
+        INSERT INTO users
+        (name, email, password, role)
+        VALUES (%s, %s, %s, %s)
     """, (
         "Admin",
         "admin@saree.com",
@@ -103,15 +108,16 @@ if admin_count == 0:
 # -----------------------------
 # ADD DEFAULT SAREES
 # -----------------------------
-saree_count = connection.execute(
-    "SELECT COUNT(*) FROM sarees"
-).fetchone()[0]
+saree_count = connection.execute("""
+    SELECT COUNT(*)
+    FROM sarees
+""").fetchone()[0]
 
 if saree_count == 0:
     connection.execute("""
         INSERT INTO sarees
         (name, category, fabric, color, price, stock, description, image)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+        VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
     """, (
         "Kanchipuram Silk Saree",
         "Silk",
@@ -126,7 +132,7 @@ if saree_count == 0:
     connection.execute("""
         INSERT INTO sarees
         (name, category, fabric, color, price, stock, description, image)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+        VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
     """, (
         "Banarasi Silk Saree",
         "Silk",
@@ -141,7 +147,7 @@ if saree_count == 0:
     connection.execute("""
         INSERT INTO sarees
         (name, category, fabric, color, price, stock, description, image)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+        VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
     """, (
         "Cotton Saree",
         "Cotton",
@@ -156,4 +162,4 @@ if saree_count == 0:
 connection.commit()
 connection.close()
 
-print("Database initialized successfully!")
+print("PostgreSQL database initialized successfully!")
