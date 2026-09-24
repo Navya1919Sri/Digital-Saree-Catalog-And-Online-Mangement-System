@@ -50,63 +50,52 @@ Order Successful - Digital Saree
 
 </section>
 
-
 <!-- EmailJS -->
 <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
 
 <script>
+emailjs.init({
+    publicKey: "TltSrS1kiSPg2tonn"
+});
 
-    emailjs.init({
-        publicKey: "TltSrS1kiSPg2tonn"
-    });
+window.addEventListener("load", function() {
+    const recipientEmail = JSON.parse('{{ order.get("customer_email", "") | tojson }}');
+    const customerName = JSON.parse('{{ order.get("customer_name", "") | tojson }}');
+    const orderId = JSON.parse('{{ order["id"] | tojson }}');
+    const orderItems = JSON.parse('{{ order_items_text | tojson }}');
+    const totalAmount = JSON.parse('{{ order["total_amount"] | tojson }}');
 
-    window.addEventListener("load", function () {
+    console.log("Customer email:", recipientEmail);
 
-        const recipientEmail = {{ order.get('customer_email', '') | tojson }};
-        const customerName = {{ order.get('customer_name', '') | tojson }};
-        const orderId = {{ order['id'] | tojson }};
-        const orderItems = {{ order_items_text | tojson }};
-        const totalAmount = {{ order['total_amount'] | tojson }};
+    if (!recipientEmail) {
+        console.error("Customer email is missing for order #" + orderId);
+        return;
+    }
 
-        console.log("Customer email:", recipientEmail);
-
-        if (!recipientEmail) {
-            console.error(
-                "Customer email is missing for order #" + orderId
-            );
-            return;
+    emailjs.send(
+        "service_1919jaya",
+        "template_1717sri",
+        {
+            to_name: customerName,
+            to_email: recipientEmail,
+            order_id: orderId,
+            order_items: orderItems,
+            total_amount: totalAmount
         }
-
-        emailjs.send(
-            "service_1919jaya",
-            "template_1717sri",
-            {
-                to_name: customerName,
-                to_email: recipientEmail,
-                order_id: orderId,
-                order_items: orderItems,
-                total_amount: totalAmount
-            }
-        )
-        .then(function(response) {
-
-            console.log(
-                "Order confirmation email sent successfully!",
-                response
-            );
-
-        })
-        .catch(function(error) {
-
-            console.error(
-                "Email could not be sent:",
-                error
-            );
-
-        });
-
+    )
+    .then(function(response) {
+        console.log(
+            "Order confirmation email sent successfully!",
+            response
+        );
+    })
+    .catch(function(error) {
+        console.error(
+            "Email could not be sent:",
+            error
+        );
     });
-
+});
 </script>
 
 {% endblock %}
