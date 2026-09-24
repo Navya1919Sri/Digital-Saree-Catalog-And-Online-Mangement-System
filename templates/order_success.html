@@ -62,22 +62,43 @@ Order Successful - Digital Saree
 
     window.addEventListener("load", function () {
 
+        const recipientEmail = "{{ order.get('customer_email', '') }}";
+
+        console.log("Customer email:", recipientEmail);
+
+        if (!recipientEmail) {
+            console.error(
+                "Customer email is missing for order #{{ order['id'] }}"
+            );
+            return;
+        }
+
         emailjs.send(
             "service_1919jaya",
             "template_1717sri",
             {
                 to_name: "{{ order.get('customer_name', '') }}",
-                to_email: "{{ order.get('email', '') }}",
+                to_email: recipientEmail,
                 order_id: "{{ order['id'] }}",
-                order_items: "Your Digital Saree order has been placed successfully.",
+                order_items: "{{ order_items_text }}",
                 total_amount: "{{ order['total_amount'] }}"
             }
         )
         .then(function(response) {
-            console.log("Order confirmation email sent successfully!");
+
+            console.log(
+                "Order confirmation email sent successfully!",
+                response
+            );
+
         })
         .catch(function(error) {
-            console.log("Email could not be sent:", error);
+
+            console.error(
+                "Email could not be sent:",
+                error
+            );
+
         });
 
     });
