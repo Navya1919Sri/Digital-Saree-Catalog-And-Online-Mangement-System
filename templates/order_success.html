@@ -50,6 +50,14 @@ Order Successful - Digital Saree
 
 </section>
 
+<div id="order-data"
+     data-email="{{ order.get('customer_email', '') | e }}"
+     data-name="{{ order.get('customer_name', '') | e }}"
+     data-order-id="{{ order['id'] }}"
+     data-items="{{ order_items_text | e }}"
+     data-total="{{ order['total_amount'] }}">
+</div>
+
 <!-- EmailJS -->
 <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
 
@@ -59,16 +67,25 @@ emailjs.init({
 });
 
 window.addEventListener("load", function() {
-    const recipientEmail = JSON.parse('{{ order.get("customer_email", "") | tojson }}');
-    const customerName = JSON.parse('{{ order.get("customer_name", "") | tojson }}');
-    const orderId = JSON.parse('{{ order["id"] | tojson }}');
-    const orderItems = JSON.parse('{{ order_items_text | tojson }}');
-    const totalAmount = JSON.parse('{{ order["total_amount"] | tojson }}');
+
+    const orderData = document.getElementById("order-data");
+
+    const recipientEmail = orderData.dataset.email;
+    const customerName = orderData.dataset.name;
+    const orderId = orderData.dataset.orderId;
+    const orderItems = orderData.dataset.items;
+    const totalAmount = orderData.dataset.total;
 
     console.log("Customer email:", recipientEmail);
+    console.log("Customer name:", customerName);
+    console.log("Order ID:", orderId);
+    console.log("Order items:", orderItems);
+    console.log("Total amount:", totalAmount);
 
     if (!recipientEmail) {
-        console.error("Customer email is missing for order #" + orderId);
+        console.error(
+            "Customer email is missing for order #" + orderId
+        );
         return;
     }
 
@@ -84,17 +101,22 @@ window.addEventListener("load", function() {
         }
     )
     .then(function(response) {
+
         console.log(
             "Order confirmation email sent successfully!",
             response
         );
+
     })
     .catch(function(error) {
+
         console.error(
             "Email could not be sent:",
             error
         );
+
     });
+
 });
 </script>
 
