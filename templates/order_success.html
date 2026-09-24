@@ -57,14 +57,14 @@ Order Successful - Digital Saree
 <script>
 
     emailjs.init({
-        publicKey: "YOUR_PUBLIC_KEY"
+        publicKey: "TltSrS1kiSPg2tonn"
     });
 
     window.addEventListener("load", function () {
 
         emailjs.send(
-            "YOUR_SERVICE_ID",
-            "YOUR_TEMPLATE_ID",
+            "service_1919jaya",
+            "template_0o0bc1u",
             {
                 to_name: "{{ order.get('customer_name', '') }}",
                 to_email: "{{ order.get('email', '') }}",
