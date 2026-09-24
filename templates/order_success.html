@@ -62,13 +62,17 @@ Order Successful - Digital Saree
 
     window.addEventListener("load", function () {
 
-        const recipientEmail = "{{ order.get('customer_email', '') }}";
+        const recipientEmail = {{ order.get('customer_email', '') | tojson }};
+        const customerName = {{ order.get('customer_name', '') | tojson }};
+        const orderId = {{ order['id'] | tojson }};
+        const orderItems = {{ order_items_text | tojson }};
+        const totalAmount = {{ order['total_amount'] | tojson }};
 
         console.log("Customer email:", recipientEmail);
 
         if (!recipientEmail) {
             console.error(
-                "Customer email is missing for order #{{ order['id'] }}"
+                "Customer email is missing for order #" + orderId
             );
             return;
         }
@@ -77,11 +81,11 @@ Order Successful - Digital Saree
             "service_1919jaya",
             "template_1717sri",
             {
-                to_name: "{{ order.get('customer_name', '') }}",
+                to_name: customerName,
                 to_email: recipientEmail,
-                order_id: "{{ order['id'] }}",
-                order_items: "{{ order_items_text }}",
-                total_amount: "{{ order['total_amount'] }}"
+                order_id: orderId,
+                order_items: orderItems,
+                total_amount: totalAmount
             }
         )
         .then(function(response) {
