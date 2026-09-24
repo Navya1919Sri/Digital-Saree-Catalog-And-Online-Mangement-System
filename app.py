@@ -100,16 +100,13 @@ def login():
         connection.close()
 
         if user:
-            # Store user information in session
             session["user_id"] = user["id"]
             session["user_name"] = user["name"]
             session["role"] = user["role"]
 
-            # Admin goes to admin dashboard
             if user["role"] == "admin":
                 return redirect(url_for("admin_dashboard"))
 
-            # Customer goes to catalog
             return redirect(url_for("catalog"))
 
         return "Invalid email or password!"
@@ -220,7 +217,6 @@ def saree_details(saree_id):
 # -----------------------------
 @app.route("/add-to-cart/<int:saree_id>", methods=["POST"])
 def add_to_cart(saree_id):
-    # Check whether user is logged in
     if "user_id" not in session:
         return redirect(url_for("login"))
 
@@ -229,7 +225,6 @@ def add_to_cart(saree_id):
     connection = get_db_connection()
     cursor = connection.cursor(cursor_factory=RealDictCursor)
 
-    # Check saree exists and get stock
     cursor.execute("""
         SELECT *
         FROM sarees
@@ -245,13 +240,11 @@ def add_to_cart(saree_id):
         connection.close()
         return "Saree not found!"
 
-    # Check stock
     if quantity > saree["stock"]:
         cursor.close()
         connection.close()
         return "Not enough stock available!"
 
-    # Check whether saree is already in cart
     cursor.execute("""
         SELECT *
         FROM cart
@@ -303,7 +296,6 @@ def add_to_cart(saree_id):
 # -----------------------------
 @app.route("/cart")
 def cart():
-    # Check login
     if "user_id" not in session:
         return redirect(url_for("login"))
 
@@ -346,7 +338,6 @@ def cart():
 # -----------------------------
 @app.route("/remove-from-cart/<int:cart_id>", methods=["POST"])
 def remove_from_cart(cart_id):
-    # Check login
     if "user_id" not in session:
         return redirect(url_for("login"))
 
@@ -373,14 +364,12 @@ def remove_from_cart(cart_id):
 # -----------------------------
 @app.route("/checkout", methods=["GET", "POST"])
 def checkout():
-    # User must be logged in
     if "user_id" not in session:
         return redirect(url_for("login"))
 
     connection = get_db_connection()
     cursor = connection.cursor(cursor_factory=RealDictCursor)
 
-    # Get cart items
     cursor.execute("""
         SELECT
             cart.id,
@@ -399,25 +388,19 @@ def checkout():
 
     cart_items = cursor.fetchall()
 
-    # Empty cart
     if not cart_items:
         cursor.close()
         connection.close()
         return redirect(url_for("cart"))
 
-    # Calculate total
     total = 0
 
     for item in cart_items:
         total += item["price"] * item["quantity"]
 
-    # -----------------------------
-    # PLACE ORDER
-    # -----------------------------
     if request.method == "POST":
         delivery_address = request.form["address"]
 
-        # Check stock before placing order
         for item in cart_items:
             if item["quantity"] > item["stock"]:
                 cursor.close()
@@ -428,7 +411,6 @@ def checkout():
                     f"{item['name']}"
                 )
 
-        # Create order
         cursor.execute("""
             INSERT INTO orders
             (user_id, total_amount, status, delivery_address)
@@ -443,7 +425,6 @@ def checkout():
 
         order_id = cursor.fetchone()["id"]
 
-        # Add order items
         for item in cart_items:
             cursor.execute("""
                 INSERT INTO order_items
@@ -456,7 +437,6 @@ def checkout():
                 item["price"]
             ))
 
-            # Reduce stock
             cursor.execute("""
                 UPDATE sarees
                 SET stock = stock - %s
@@ -466,7 +446,6 @@ def checkout():
                 item["saree_id"]
             ))
 
-        # Clear user's cart
         cursor.execute("""
             DELETE FROM cart
             WHERE user_id = %s
@@ -507,9 +486,15 @@ def order_success(order_id):
     cursor = connection.cursor(cursor_factory=RealDictCursor)
 
     cursor.execute("""
-        SELECT *
+        SELECT
+            orders.*,
+            users.name AS customer_name,
+            users.email AS customer_email
         FROM orders
-        WHERE id = %s AND user_id = %s
+        JOIN users
+        ON orders.user_id = users.id
+        WHERE orders.id = %s
+        AND orders.user_id = %s
     """, (
         order_id,
         session["user_id"]
@@ -517,15 +502,41 @@ def order_success(order_id):
 
     order = cursor.fetchone()
 
+    if order is None:
+        cursor.close()
+        connection.close()
+        return "Order not found!"
+
+    cursor.execute("""
+        SELECT
+            order_items.quantity,
+            order_items.price,
+            sarees.name
+        FROM order_items
+        JOIN sarees
+        ON order_items.saree_id = sarees.id
+        WHERE order_items.order_id = %s
+    """, (
+        order_id,
+    ))
+
+    items = cursor.fetchall()
+
+    order_items_text = ""
+
+    for item in items:
+        order_items_text += (
+            f"{item['name']} x {item['quantity']} "
+            f"- ₹{item['price'] * item['quantity']}\n"
+        )
+
     cursor.close()
     connection.close()
 
-    if order is None:
-        return "Order not found!"
-
     return render_template(
         "order_success.html",
-        order=order
+        order=order,
+        order_items_text=order_items_text
     )
 
 # -----------------------------
@@ -644,7 +655,6 @@ def my_orders():
 # -----------------------------
 @app.route("/admin/sarees")
 def admin_sarees():
-    # Only logged-in admin can access
     if "user_id" not in session:
         return redirect(url_for("login"))
 
@@ -675,7 +685,6 @@ def admin_sarees():
 # -----------------------------
 @app.route("/admin/sarees/add", methods=["GET", "POST"])
 def add_saree():
-    # Check admin login
     if "user_id" not in session:
         return redirect(url_for("login"))
 
@@ -737,7 +746,6 @@ def add_saree():
 # -----------------------------
 @app.route("/admin/sarees/edit/<int:saree_id>", methods=["GET", "POST"])
 def edit_saree(saree_id):
-    # Check admin login
     if "user_id" not in session:
         return redirect(url_for("login"))
 
@@ -762,7 +770,6 @@ def edit_saree(saree_id):
         connection.close()
         return "Saree not found!"
 
-    # Update saree
     if request.method == "POST":
         name = request.form["name"]
         category = request.form["category"]
@@ -814,7 +821,6 @@ def edit_saree(saree_id):
 # -----------------------------
 @app.route("/admin/sarees/delete/<int:saree_id>")
 def delete_saree(saree_id):
-    # Check admin login
     if "user_id" not in session:
         return redirect(url_for("login"))
 
@@ -918,11 +924,9 @@ def admin_orders():
 # -----------------------------
 @app.route("/admin/orders/update/<int:order_id>", methods=["POST"])
 def update_order_status(order_id):
-    # Check login
     if "user_id" not in session:
         return redirect(url_for("login"))
 
-    # Check admin role
     if session.get("role") != "admin":
         return "Access denied!"
 
