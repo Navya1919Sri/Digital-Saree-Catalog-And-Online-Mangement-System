@@ -50,4 +50,38 @@ Order Successful - Digital Saree
 
 </section>
 
+
+<!-- EmailJS -->
+<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+
+<script>
+
+    emailjs.init({
+        publicKey: "YOUR_PUBLIC_KEY"
+    });
+
+    window.addEventListener("load", function () {
+
+        emailjs.send(
+            "YOUR_SERVICE_ID",
+            "YOUR_TEMPLATE_ID",
+            {
+                to_name: "{{ order.get('customer_name', '') }}",
+                to_email: "{{ order.get('email', '') }}",
+                order_id: "{{ order['id'] }}",
+                order_items: "Your Digital Saree order has been placed successfully.",
+                total_amount: "{{ order['total_amount'] }}"
+            }
+        )
+        .then(function(response) {
+            console.log("Order confirmation email sent successfully!");
+        })
+        .catch(function(error) {
+            console.log("Email could not be sent:", error);
+        });
+
+    });
+
+</script>
+
 {% endblock %}
