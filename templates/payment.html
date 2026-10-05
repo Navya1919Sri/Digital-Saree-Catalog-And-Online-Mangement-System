@@ -1,0 +1,98 @@
+{% extends "base.html" %}
+
+{% block title %}
+Payment Details - Digital Saree
+{% endblock %}
+
+{% block content %}
+
+<section class="checkout-page">
+
+    <h1>Payment Details</h1>
+
+    <div class="address-section">
+
+        <form method="POST">
+
+            <h2>Select Payment Method</h2>
+
+            <div class="payment-option">
+                <label>
+                    <input type="radio" name="payment_method" value="UPI" onclick="hideScanner()" required>
+                    UPI
+                </label>
+            </div>
+
+            <div class="payment-option">
+                <label>
+                    <input type="radio" name="payment_method" value="Google Pay" onclick="showScanner('Google Pay')">
+                    Google Pay
+                </label>
+            </div>
+
+            <div class="payment-option">
+                <label>
+                    <input type="radio" name="payment_method" value="PhonePe" onclick="showScanner('PhonePe')">
+                    PhonePe
+                </label>
+            </div>
+
+            <div class="payment-option">
+                <label>
+                    <input type="radio" name="payment_method" value="Paytm" onclick="showScanner('Paytm')">
+                    Paytm
+                </label>
+            </div>
+
+            <div class="payment-option">
+                <label>
+                    <input type="radio" name="payment_method" value="Credit/Debit Card" onclick="hideScanner()">
+                    Credit/Debit Card
+                </label>
+            </div>
+
+            <div class="payment-option">
+                <label>
+                    <input type="radio" name="payment_method" value="Cash on Delivery" onclick="hideScanner()">
+                    Cash on Delivery
+                </label>
+            </div>
+
+            <div id="scanner" style="display:none;text-align:center;margin-top:20px;">
+
+                <h3 id="scanner-title"></h3>
+
+                <img id="scanner-image"
+                     src="{{ url_for('static', filename='images/demo-qr.png') }}"
+                     width="250"
+                     height="250">
+
+                <p>Open the selected payment app and scan this demo QR code.</p>
+
+            </div>
+
+            <button type="submit">Place Order</button>
+
+        </form>
+
+    </div>
+
+</section>
+
+<script>
+function showScanner(method) {
+    document.getElementById("scanner").style.display = "block";
+
+    document.getElementById("scanner-title").innerText =
+        "Scan with " + method;
+
+    document.getElementById("scanner-image").src =
+        "{{ url_for('static', filename='images/demo-qr.png') }}";
+}
+
+function hideScanner() {
+    document.getElementById("scanner").style.display = "none";
+}
+</script>
+
+{% endblock %}

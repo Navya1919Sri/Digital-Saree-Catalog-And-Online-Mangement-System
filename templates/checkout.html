@@ -1,28 +1,17 @@
 {% extends "base.html" %}
-
 {% block title %}
 Checkout - Digital Saree
 {% endblock %}
-
 {% block content %}
-
 <section class="checkout-page">
-
     <h1>Checkout</h1>
-
     <div class="checkout-container">
-
         <div class="order-summary">
-
             <h2>Order Summary</h2>
-
             {% for item in cart_items %}
-
             <div class="checkout-item">
-
                 <div>
                     <h3>{{ item["name"] }}</h3>
-
                     <p>
                         Quantity:
                         {{ item["quantity"] }}
@@ -32,95 +21,21 @@ Checkout - Digital Saree
                 <div>
                     ₹{{ item["price"] * item["quantity"] }}
                 </div>
-
             </div>
-
             {% endfor %}
-
             <hr>
-
             <h2 class="checkout-total">
                 Total: ₹{{ total }}
             </h2>
-
         </div>
-
         <div class="address-section">
-
             <h2>Delivery Address</h2>
-
             <form method="POST">
-
                 <label>Full Delivery Address</label>
-
                 <textarea name="address" placeholder="Enter your complete delivery address" required></textarea>
-
-                <h2>Payment Details</h2>
-
-                <button type="button" class="payment-details-btn" onclick="showPaymentOptions()">
-                    Payment Details
-                </button>
-
-                <div id="payment-options" style="display:none;">
-
-                    <div class="payment-option">
-                        <label>
-                            <input type="radio" name="payment_method" value="UPI" required>
-                            UPI
-                        </label>
-                    </div>
-
-                    <div class="payment-option">
-                        <label>
-                            <input type="radio" name="payment_method" value="Google Pay">
-                            Google Pay
-                        </label>
-                    </div>
-
-                    <div class="payment-option">
-                        <label>
-                            <input type="radio" name="payment_method" value="PhonePe">
-                            PhonePe
-                        </label>
-                    </div>
-
-                    <div class="payment-option">
-                        <label>
-                            <input type="radio" name="payment_method" value="Paytm">
-                            Paytm
-                        </label>
-                    </div>
-
-                    <div class="payment-option">
-                        <label>
-                            <input type="radio" name="payment_method" value="Credit/Debit Card">
-                            Credit/Debit Card
-                        </label>
-                    </div>
-
-                    <div class="payment-option">
-                        <label>
-                            <input type="radio" name="payment_method" value="Cash on Delivery">
-                            Cash on Delivery
-                        </label>
-                    </div>
-
-                </div>
-
-                <button type="submit">Place Order</button>
-
+                 <button type="submit">Payment Details</button>
             </form>
-
         </div>
-
     </div>
-
 </section>
-
-<script>
-function showPaymentOptions() {
-    document.getElementById("payment-options").style.display = "block";
-}
-</script>
-
 {% endblock %}

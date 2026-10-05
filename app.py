@@ -396,7 +396,6 @@ def checkout():
         total += item["price"] * item["quantity"]
     if request.method == "POST":
         delivery_address = request.form["address"]
-        payment_method = request.form["payment_method"]
         for item in cart_items:
             if item["quantity"] > item["stock"]:
                 cursor.close()
@@ -405,6 +404,73 @@ def checkout():
                     f"Not enough stock available for "
                     f"{item['name']}"
                 )
+        session["delivery_address"] = delivery_address
+        cursor.close()
+        connection.close()
+        return redirect(url_for("payment"))
+    cursor.close()
+    connection.close()
+    return render_template(
+        "checkout.html",
+        cart_items=cart_items,
+        total=total
+    )
+# -----------------------------
+# PAYMENT
+# -----------------------------
+@app.route("/payment", methods=["GET", "POST"])
+def payment():
+    if "user_id" not in session:
+        return redirect(url_for("login"))
+
+    if "delivery_address" not in session:
+        return redirect(url_for("checkout"))
+
+    connection = get_db_connection()
+    cursor = connection.cursor(cursor_factory=RealDictCursor)
+
+    cursor.execute("""
+        SELECT
+            cart.id,
+            cart.saree_id,
+            cart.quantity,
+            sarees.name,
+            sarees.price,
+            sarees.stock
+        FROM cart
+        JOIN sarees
+        ON cart.saree_id = sarees.id
+        WHERE cart.user_id = %s
+    """, (
+        session["user_id"],
+    ))
+
+    cart_items = cursor.fetchall()
+
+    if not cart_items:
+        cursor.close()
+        connection.close()
+        return redirect(url_for("cart"))
+
+    total = 0
+
+    for item in cart_items:
+        total += item["price"] * item["quantity"]
+
+    if request.method == "POST":
+        payment_method = request.form["payment_method"]
+        delivery_address = session["delivery_address"]
+
+        for item in cart_items:
+            if item["quantity"] > item["stock"]:
+                cursor.close()
+                connection.close()
+
+                return (
+                    f"Not enough stock available for "
+                    f"{item['name']}"
+                )
+
         cursor.execute("""
             INSERT INTO orders
             (user_id, total_amount, status, delivery_address, payment_method)
@@ -417,7 +483,9 @@ def checkout():
             delivery_address,
             payment_method
         ))
+
         order_id = cursor.fetchone()["id"]
+
         for item in cart_items:
             cursor.execute("""
                 INSERT INTO order_items
@@ -429,6 +497,7 @@ def checkout():
                 item["quantity"],
                 item["price"]
             ))
+
             cursor.execute("""
                 UPDATE sarees
                 SET stock = stock - %s
@@ -437,6 +506,7 @@ def checkout():
                 item["quantity"],
                 item["saree_id"]
             ))
+
         cursor.execute("""
             DELETE FROM cart
             WHERE user_id = %s
@@ -449,17 +519,20 @@ def checkout():
         cursor.close()
         connection.close()
 
+        session.pop("delivery_address", None)
+
         return redirect(
             url_for(
                 "order_success",
                 order_id=order_id
             )
         )
+
     cursor.close()
     connection.close()
+
     return render_template(
-        "checkout.html",
-        cart_items=cart_items,
+        "payment.html",
         total=total
     )
 # -----------------------------
