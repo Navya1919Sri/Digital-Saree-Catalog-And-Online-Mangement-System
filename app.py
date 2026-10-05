@@ -23,6 +23,30 @@ def get_db_connection():
     )
     return connection
 
+def initialize_database():
+    connection = None
+    cursor = None
+    try:
+        connection = get_db_connection()
+        cursor = connection.cursor()
+        cursor.execute("""
+            ALTER TABLE orders
+            ADD COLUMN IF NOT EXISTS payment_method TEXT
+        """)
+        connection.commit()
+        print("Database migration completed successfully.")
+    except Exception as e:
+        if connection:
+            connection.rollback()
+        print("DATABASE MIGRATION ERROR:", str(e))
+    finally:
+        if cursor:
+            cursor.close()
+        if connection:
+            connection.close()
+
+initialize_database()
+
 # -----------------------------
 # HOME PAGE
 # -----------------------------
@@ -59,7 +83,6 @@ def register():
                 "customer"
             ))
             connection.commit()
-
         except psycopg2.errors.UniqueViolation:
             connection.rollback()
             cursor.close()
@@ -68,7 +91,6 @@ def register():
 
         cursor.close()
         connection.close()
-
         return redirect(url_for("login"))
 
     return render_template("register.html")
@@ -272,7 +294,6 @@ def add_to_cart(saree_id):
             new_quantity,
             existing_item["id"]
         ))
-
     else:
         cursor.execute("""
             INSERT INTO cart
@@ -366,8 +387,10 @@ def remove_from_cart(cart_id):
 def checkout():
     if "user_id" not in session:
         return redirect(url_for("login"))
+
     connection = get_db_connection()
     cursor = connection.cursor(cursor_factory=RealDictCursor)
+
     cursor.execute("""
         SELECT
             cart.id,
@@ -383,16 +406,22 @@ def checkout():
     """, (
         session["user_id"],
     ))
+
     cart_items = cursor.fetchall()
+
     if not cart_items:
         cursor.close()
         connection.close()
         return redirect(url_for("cart"))
+
     total = 0
+
     for item in cart_items:
         total += item["price"] * item["quantity"]
+
     if request.method == "POST":
         delivery_address = request.form["address"]
+
         for item in cart_items:
             if item["quantity"] > item["stock"]:
                 cursor.close()
@@ -401,23 +430,28 @@ def checkout():
                     f"Not enough stock available for "
                     f"{item['name']}"
                 )
+
         session["delivery_address"] = delivery_address
+
         cursor.close()
         connection.close()
+
         return redirect(url_for("payment"))
+
     cursor.close()
     connection.close()
+
     return render_template(
         "checkout.html",
         cart_items=cart_items,
         total=total
     )
+
 # -----------------------------
 # PAYMENT
 # -----------------------------
 @app.route("/payment", methods=["GET", "POST"])
 def payment():
-
     if "user_id" not in session:
         return redirect(url_for("login"))
 
@@ -465,7 +499,6 @@ def payment():
         # PLACE ORDER
         # -----------------------------
         if request.method == "POST":
-
             # Get selected payment method safely
             payment_method = request.form.get("payment_method")
 
@@ -479,19 +512,15 @@ def payment():
 
             # Check stock again
             for item in cart_items:
-
                 if item["quantity"] > item["stock"]:
-
                     cursor.close()
                     connection.close()
-
                     return (
                         f"Not enough stock available for "
                         f"{item['name']}"
                     )
 
             try:
-
                 # Create order
                 cursor.execute("""
                     INSERT INTO orders
@@ -521,7 +550,6 @@ def payment():
 
                 # Add order items
                 for item in cart_items:
-
                     cursor.execute("""
                         INSERT INTO order_items
                         (
@@ -560,7 +588,6 @@ def payment():
                 connection.commit()
 
             except Exception as e:
-
                 connection.rollback()
 
                 print("================================")
@@ -574,7 +601,6 @@ def payment():
                 )
 
             finally:
-
                 if cursor:
                     cursor.close()
 
@@ -604,7 +630,6 @@ def payment():
         )
 
     except Exception as e:
-
         if connection:
             connection.rollback()
 
@@ -622,6 +647,7 @@ def payment():
         return (
             "Internal server error while processing payment."
         )
+
 # -----------------------------
 # ORDER SUCCESS
 # -----------------------------
