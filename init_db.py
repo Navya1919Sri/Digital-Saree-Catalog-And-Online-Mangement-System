@@ -67,8 +67,18 @@ cursor.execute("""
         total_amount REAL NOT NULL,
         status TEXT DEFAULT 'Pending',
         delivery_address TEXT NOT NULL,
+        payment_method TEXT,
         FOREIGN KEY (user_id) REFERENCES users(id)
     )
+""")
+
+# -----------------------------
+# ADD PAYMENT METHOD COLUMN
+# TO EXISTING ORDERS TABLE
+# -----------------------------
+cursor.execute("""
+    ALTER TABLE orders
+    ADD COLUMN IF NOT EXISTS payment_method TEXT
 """)
 
 # -----------------------------
@@ -170,8 +180,6 @@ if saree_count == 0:
 # SAVE CHANGES
 # -----------------------------
 connection.commit()
-
 cursor.close()
 connection.close()
-
 print("PostgreSQL database initialized successfully!")
