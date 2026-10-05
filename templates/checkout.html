@@ -52,23 +52,33 @@ Checkout - Digital Saree
 
             <form method="POST">
 
-                <label>
-                    Full Delivery Address
-                </label>
+               <label>Full Delivery Address</label>
+                <textarea name="address" placeholder="Enter your complete delivery address" required></textarea>
 
-                <textarea
-                    name="address"
-                    required
-                    placeholder="Enter your complete delivery address"
-                ></textarea>
+                <h2>Payment Details</h2>
 
-                <button
-                    type="submit"
-                    class="btn"
-                >
-                    Place Order
-                </button>
+                <div class="payment-option">
+                    <label>
+                        <input type="radio" name="payment_method" value="Cash on Delivery" required>
+                        Cash on Delivery
+                    </label>
+                </div>
 
+                <div class="payment-option">
+                    <label>
+                        <input type="radio" name="payment_method" value="UPI">
+                        UPI
+                    </label>
+                </div>
+
+                <div class="payment-option">
+                    <label>
+                        <input type="radio" name="payment_method" value="Credit/Debit Card">
+                        Credit/Debit Card
+                    </label>
+                </div>
+
+                <button type="submit">Place Order</button>
             </form>
 
         </div>

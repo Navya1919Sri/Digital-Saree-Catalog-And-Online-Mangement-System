@@ -362,14 +362,15 @@ def remove_from_cart(cart_id):
 # -----------------------------
 # CHECKOUT
 # -----------------------------
+# -----------------------------
+# CHECKOUT
+# -----------------------------
 @app.route("/checkout", methods=["GET", "POST"])
 def checkout():
     if "user_id" not in session:
         return redirect(url_for("login"))
-
     connection = get_db_connection()
     cursor = connection.cursor(cursor_factory=RealDictCursor)
-
     cursor.execute("""
         SELECT
             cart.id,
@@ -385,46 +386,38 @@ def checkout():
     """, (
         session["user_id"],
     ))
-
     cart_items = cursor.fetchall()
-
     if not cart_items:
         cursor.close()
         connection.close()
         return redirect(url_for("cart"))
-
     total = 0
-
     for item in cart_items:
         total += item["price"] * item["quantity"]
-
     if request.method == "POST":
         delivery_address = request.form["address"]
-
+        payment_method = request.form["payment_method"]
         for item in cart_items:
             if item["quantity"] > item["stock"]:
                 cursor.close()
                 connection.close()
-
                 return (
                     f"Not enough stock available for "
                     f"{item['name']}"
                 )
-
         cursor.execute("""
             INSERT INTO orders
-            (user_id, total_amount, status, delivery_address)
-            VALUES (%s, %s, %s, %s)
+            (user_id, total_amount, status, delivery_address, payment_method)
+            VALUES (%s, %s, %s, %s, %s)
             RETURNING id
         """, (
             session["user_id"],
             total,
             "Pending",
-            delivery_address
+            delivery_address,
+            payment_method
         ))
-
         order_id = cursor.fetchone()["id"]
-
         for item in cart_items:
             cursor.execute("""
                 INSERT INTO order_items
@@ -436,7 +429,6 @@ def checkout():
                 item["quantity"],
                 item["price"]
             ))
-
             cursor.execute("""
                 UPDATE sarees
                 SET stock = stock - %s
@@ -445,7 +437,6 @@ def checkout():
                 item["quantity"],
                 item["saree_id"]
             ))
-
         cursor.execute("""
             DELETE FROM cart
             WHERE user_id = %s
@@ -464,16 +455,13 @@ def checkout():
                 order_id=order_id
             )
         )
-
     cursor.close()
     connection.close()
-
     return render_template(
         "checkout.html",
         cart_items=cart_items,
         total=total
     )
-
 # -----------------------------
 # ORDER SUCCESS
 # -----------------------------
