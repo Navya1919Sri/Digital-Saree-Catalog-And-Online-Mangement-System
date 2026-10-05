@@ -1150,7 +1150,7 @@ def admin_database():
     cursor = connection.cursor(cursor_factory=RealDictCursor)
 
     cursor.execute("""
-        SELECT id, name, email, phone, address, role
+        SELECT id, name, email, password, phone, address, role
         FROM users
         ORDER BY id DESC
     """)
