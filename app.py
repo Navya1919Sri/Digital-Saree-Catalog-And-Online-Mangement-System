@@ -362,9 +362,6 @@ def remove_from_cart(cart_id):
 # -----------------------------
 # CHECKOUT
 # -----------------------------
-# -----------------------------
-# CHECKOUT
-# -----------------------------
 @app.route("/checkout", methods=["GET", "POST"])
 def checkout():
     if "user_id" not in session:
@@ -420,121 +417,211 @@ def checkout():
 # -----------------------------
 @app.route("/payment", methods=["GET", "POST"])
 def payment():
+
     if "user_id" not in session:
         return redirect(url_for("login"))
 
     if "delivery_address" not in session:
         return redirect(url_for("checkout"))
 
-    connection = get_db_connection()
-    cursor = connection.cursor(cursor_factory=RealDictCursor)
+    connection = None
+    cursor = None
 
-    cursor.execute("""
-        SELECT
-            cart.id,
-            cart.saree_id,
-            cart.quantity,
-            sarees.name,
-            sarees.price,
-            sarees.stock
-        FROM cart
-        JOIN sarees
-        ON cart.saree_id = sarees.id
-        WHERE cart.user_id = %s
-    """, (
-        session["user_id"],
-    ))
+    try:
+        connection = get_db_connection()
+        cursor = connection.cursor(cursor_factory=RealDictCursor)
 
-    cart_items = cursor.fetchall()
+        # Get cart items
+        cursor.execute("""
+            SELECT
+                cart.id,
+                cart.saree_id,
+                cart.quantity,
+                sarees.name,
+                sarees.price,
+                sarees.stock
+            FROM cart
+            JOIN sarees
+            ON cart.saree_id = sarees.id
+            WHERE cart.user_id = %s
+        """, (
+            session["user_id"],
+        ))
 
-    if not cart_items:
-        cursor.close()
-        connection.close()
-        return redirect(url_for("cart"))
+        cart_items = cursor.fetchall()
 
-    total = 0
+        if not cart_items:
+            cursor.close()
+            connection.close()
+            return redirect(url_for("cart"))
 
-    for item in cart_items:
-        total += item["price"] * item["quantity"]
-
-    if request.method == "POST":
-        payment_method = request.form["payment_method"]
-        delivery_address = session["delivery_address"]
+        # Calculate total
+        total = 0
 
         for item in cart_items:
-            if item["quantity"] > item["stock"]:
-                cursor.close()
-                connection.close()
+            total += item["price"] * item["quantity"]
+
+        # -----------------------------
+        # PLACE ORDER
+        # -----------------------------
+        if request.method == "POST":
+
+            # Get selected payment method safely
+            payment_method = request.form.get("payment_method")
+
+            if not payment_method:
+                return "Please select a payment method!"
+
+            delivery_address = session.get("delivery_address")
+
+            if not delivery_address:
+                return redirect(url_for("checkout"))
+
+            # Check stock again
+            for item in cart_items:
+
+                if item["quantity"] > item["stock"]:
+
+                    cursor.close()
+                    connection.close()
+
+                    return (
+                        f"Not enough stock available for "
+                        f"{item['name']}"
+                    )
+
+            try:
+
+                # Create order
+                cursor.execute("""
+                    INSERT INTO orders
+                    (
+                        user_id,
+                        total_amount,
+                        status,
+                        delivery_address,
+                        payment_method
+                    )
+                    VALUES (%s, %s, %s, %s, %s)
+                    RETURNING id
+                """, (
+                    session["user_id"],
+                    total,
+                    "Pending",
+                    delivery_address,
+                    payment_method
+                ))
+
+                order = cursor.fetchone()
+
+                if not order:
+                    raise Exception("Order was not created.")
+
+                order_id = order["id"]
+
+                # Add order items
+                for item in cart_items:
+
+                    cursor.execute("""
+                        INSERT INTO order_items
+                        (
+                            order_id,
+                            saree_id,
+                            quantity,
+                            price
+                        )
+                        VALUES (%s, %s, %s, %s)
+                    """, (
+                        order_id,
+                        item["saree_id"],
+                        item["quantity"],
+                        item["price"]
+                    ))
+
+                    # Reduce stock
+                    cursor.execute("""
+                        UPDATE sarees
+                        SET stock = stock - %s
+                        WHERE id = %s
+                    """, (
+                        item["quantity"],
+                        item["saree_id"]
+                    ))
+
+                # Clear cart
+                cursor.execute("""
+                    DELETE FROM cart
+                    WHERE user_id = %s
+                """, (
+                    session["user_id"],
+                ))
+
+                # Save everything
+                connection.commit()
+
+            except Exception as e:
+
+                connection.rollback()
+
+                print("================================")
+                print("PAYMENT / ORDER ERROR:")
+                print(str(e))
+                print("================================")
 
                 return (
-                    f"Not enough stock available for "
-                    f"{item['name']}"
+                    "Unable to place order. "
+                    "Please check the server logs."
                 )
 
-        cursor.execute("""
-            INSERT INTO orders
-            (user_id, total_amount, status, delivery_address, payment_method)
-            VALUES (%s, %s, %s, %s, %s)
-            RETURNING id
-        """, (
-            session["user_id"],
-            total,
-            "Pending",
-            delivery_address,
-            payment_method
-        ))
+            finally:
 
-        order_id = cursor.fetchone()["id"]
+                if cursor:
+                    cursor.close()
 
-        for item in cart_items:
-            cursor.execute("""
-                INSERT INTO order_items
-                (order_id, saree_id, quantity, price)
-                VALUES (%s, %s, %s, %s)
-            """, (
-                order_id,
-                item["saree_id"],
-                item["quantity"],
-                item["price"]
-            ))
+                if connection:
+                    connection.close()
 
-            cursor.execute("""
-                UPDATE sarees
-                SET stock = stock - %s
-                WHERE id = %s
-            """, (
-                item["quantity"],
-                item["saree_id"]
-            ))
+            # Remove delivery address from session
+            session.pop("delivery_address", None)
 
-        cursor.execute("""
-            DELETE FROM cart
-            WHERE user_id = %s
-        """, (
-            session["user_id"],
-        ))
+            # Go to success page
+            return redirect(
+                url_for(
+                    "order_success",
+                    order_id=order_id
+                )
+            )
 
-        connection.commit()
-
+        # -----------------------------
+        # SHOW PAYMENT PAGE
+        # -----------------------------
         cursor.close()
         connection.close()
 
-        session.pop("delivery_address", None)
-
-        return redirect(
-            url_for(
-                "order_success",
-                order_id=order_id
-            )
+        return render_template(
+            "payment.html",
+            total=total
         )
 
-    cursor.close()
-    connection.close()
+    except Exception as e:
 
-    return render_template(
-        "payment.html",
-        total=total
-    )
+        if connection:
+            connection.rollback()
+
+        if cursor:
+            cursor.close()
+
+        if connection:
+            connection.close()
+
+        print("================================")
+        print("PAYMENT PAGE ERROR:")
+        print(str(e))
+        print("================================")
+
+        return (
+            "Internal server error while processing payment."
+        )
 # -----------------------------
 # ORDER SUCCESS
 # -----------------------------
