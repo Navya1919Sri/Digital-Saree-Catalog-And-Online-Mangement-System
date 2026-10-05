@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Database Data</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+        }
+        h1 {
+            margin-bottom: 30px;
+        }
+        h2 {
+            margin-top: 35px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+        th, td {
+            border: 1px solid #ccc;
+            padding: 8px;
+            text-align: left;
+        }
+        th {
+            background: #f2f2f2;
+        }
+    </style>
+</head>
+<body>
+
+<h1>Stored Database Data</h1>
+
+<h2>Users</h2>
+<table>
+    <tr>
+        <th>ID</th>
+        <th>Name</th>
+        <th>Email</th>
+        <th>Phone</th>
+        <th>Address</th>
+        <th>Role</th>
+    </tr>
+    {% for user in users %}
+    <tr>
+        <td>{{ user.id }}</td>
+        <td>{{ user.name }}</td>
+        <td>{{ user.email }}</td>
+        <td>{{ user.phone }}</td>
+        <td>{{ user.address }}</td>
+        <td>{{ user.role }}</td>
+    </tr>
+    {% endfor %}
+</table>
+
+<h2>Sarees</h2>
+<table>
+    <tr>
+        <th>ID</th>
+        <th>Name</th>
+        <th>Category</th>
+        <th>Fabric</th>
+        <th>Color</th>
+        <th>Price</th>
+        <th>Stock</th>
+    </tr>
+    {% for saree in sarees %}
+    <tr>
+        <td>{{ saree.id }}</td>
+        <td>{{ saree.name }}</td>
+        <td>{{ saree.category }}</td>
+        <td>{{ saree.fabric }}</td>
+        <td>{{ saree.color }}</td>
+        <td>{{ saree.price }}</td>
+        <td>{{ saree.stock }}</td>
+    </tr>
+    {% endfor %}
+</table>
+
+<h2>Orders</h2>
+<table>
+    <tr>
+        <th>ID</th>
+        <th>User ID</th>
+        <th>Total</th>
+        <th>Status</th>
+        <th>Address</th>
+        <th>Payment Method</th>
+    </tr>
+    {% for order in orders %}
+    <tr>
+        <td>{{ order.id }}</td>
+        <td>{{ order.user_id }}</td>
+        <td>{{ order.total_amount }}</td>
+        <td>{{ order.status }}</td>
+        <td>{{ order.delivery_address }}</td>
+        <td>{{ order.payment_method }}</td>
+    </tr>
+    {% endfor %}
+</table>
+
+<h2>Order Items</h2>
+<table>
+    <tr>
+        <th>Order ID</th>
+        <th>Saree ID</th>
+        <th>Quantity</th>
+        <th>Price</th>
+    </tr>
+    {% for item in order_items %}
+    <tr>
+        <td>{{ item.order_id }}</td>
+        <td>{{ item.saree_id }}</td>
+        <td>{{ item.quantity }}</td>
+        <td>{{ item.price }}</td>
+    </tr>
+    {% endfor %}
+</table>
+
+<h2>Cart</h2>
+<table>
+    <tr>
+        <th>ID</th>
+        <th>User ID</th>
+        <th>Saree ID</th>
+        <th>Quantity</th>
+    </tr>
+    {% for item in cart_items %}
+    <tr>
+        <td>{{ item.id }}</td>
+        <td>{{ item.user_id }}</td>
+        <td>{{ item.saree_id }}</td>
+        <td>{{ item.quantity }}</td>
+    </tr>
+    {% endfor %}
+</table>
+
+</body>
+</html>

@@ -1135,6 +1135,66 @@ def update_order_status(order_id):
     connection.close()
 
     return redirect(url_for("admin_orders"))
+# -----------------------------
+# ADMIN - VIEW DATABASE DATA
+# -----------------------------
+@app.route("/admin/database")
+def admin_database():
+    if "user_id" not in session:
+        return redirect(url_for("login"))
+
+    if session.get("role") != "admin":
+        return "Access denied!"
+
+    connection = get_db_connection()
+    cursor = connection.cursor(cursor_factory=RealDictCursor)
+
+    cursor.execute("""
+        SELECT id, name, email, phone, address, role
+        FROM users
+        ORDER BY id DESC
+    """)
+    users = cursor.fetchall()
+
+    cursor.execute("""
+        SELECT *
+        FROM sarees
+        ORDER BY id DESC
+    """)
+    sarees = cursor.fetchall()
+
+    cursor.execute("""
+        SELECT *
+        FROM orders
+        ORDER BY id DESC
+    """)
+    orders = cursor.fetchall()
+
+    cursor.execute("""
+        SELECT *
+        FROM order_items
+        ORDER BY order_id DESC
+    """)
+    order_items = cursor.fetchall()
+
+    cursor.execute("""
+        SELECT *
+        FROM cart
+        ORDER BY id DESC
+    """)
+    cart_items = cursor.fetchall()
+
+    cursor.close()
+    connection.close()
+
+    return render_template(
+        "admin/database.html",
+        users=users,
+        sarees=sarees,
+        orders=orders,
+        order_items=order_items,
+        cart_items=cart_items
+    )
 
 # -----------------------------
 # RUN APPLICATION
