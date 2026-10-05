@@ -143,6 +143,17 @@ Edit Saree - Admin
 
             </div>
 
+            <div class="form-group">
+                <label>Current Image</label><br>
+                {% if saree['image'] %}
+                <img src="{{ url_for('static', filename='images/' + saree['image']) }}" style="width:150px; border-radius:8px; margin-bottom:10px;">
+                {% endif %}
+            </div>
+
+            <div class="form-group">
+                <label>Change Image (optional)</label>
+                <input type="file" name="image" accept="image/*">
+            </div>
 
             <div class="form-buttons">
 
