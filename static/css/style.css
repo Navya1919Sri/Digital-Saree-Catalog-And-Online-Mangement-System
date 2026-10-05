@@ -1429,3 +1429,20 @@ footer {
 .remove-btn:hover {
     background-color: #b02a37;
 }
+.btn-group {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 30px;
+    align-items: center;
+}
+.btn-cart {
+    background-color: #2ecc71;
+    color: white;
+    border: none;
+    padding: 14px 16px;
+    border-radius: 5px;
+    cursor: pointer;
+}
+.btn-cart:hover {
+    background-color: #27ae60;
+}
