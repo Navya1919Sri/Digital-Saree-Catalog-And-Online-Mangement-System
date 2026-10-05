@@ -30,10 +30,17 @@ Order Successful - Digital Saree
         </p>
 
         <p>
-            Status:
+            Order Status:
             <strong>{{ order["status"] }}</strong>
         </p>
-
+         <p>
+            Payment Method:
+            <strong>{{ order["payment_method"] }}</strong>
+        </p>
+        <p>
+            Payment Status:
+            <strong>{{ order["payment_status"] }}</strong>
+        </p>
         <div class="success-buttons">
 
             <a href="/orders" class="btn">
