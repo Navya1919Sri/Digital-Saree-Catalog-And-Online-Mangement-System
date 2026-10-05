@@ -29,7 +29,7 @@
             <a href="/cart">Cart</a>
 
             <a href="/orders">My Orders</a>
-
+            <a href="{{ url_for('wishlist') }}">My Wishlist</a>
             {% if session.get("role") == "admin" %}
                 <a href="/admin">Admin</a>
             {% endif %}

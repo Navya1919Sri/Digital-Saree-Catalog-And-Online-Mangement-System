@@ -1,0 +1,68 @@
+{% extends "base.html" %}
+
+{% block title %}
+My Wishlist - Digital Saree
+{% endblock %}
+
+{% block content %}
+
+<section class="wishlist-page">
+
+<h1>My Wishlist</h1>
+
+{% if sarees %}
+
+<div class="saree-grid">
+
+{% for saree in sarees %}
+
+<div class="saree-card">
+
+{% if saree["image"] %}
+<img
+src="{{ url_for('static', filename='images/' + saree['image']) }}"
+alt="{{ saree['name'] }}"
+>
+{% endif %}
+
+<h3>
+{{ saree["name"] }}
+</h3>
+
+<p>
+₹{{ saree["price"] }}
+</p>
+
+<a href="{{ url_for('saree_details', saree_id=saree['id']) }}">
+View Saree
+</a>
+
+<form method="POST" action="{{ url_for('toggle_wishlist', saree_id=saree['id']) }}">
+<button type="submit">
+♥ Remove from Wishlist
+</button>
+</form>
+
+</div>
+
+{% endfor %}
+
+</div>
+
+{% else %}
+
+<h2>Your wishlist is empty.</h2>
+
+<p>
+You haven't liked any sarees yet.
+</p>
+
+<a href="{{ url_for('catalog') }}">
+Browse Sarees
+</a>
+
+{% endif %}
+
+</section>
+
+{% endblock %}

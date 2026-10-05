@@ -44,6 +44,14 @@ def initialize_database():
             ALTER TABLE orders
             ADD COLUMN IF NOT EXISTS return_status TEXT
         """)
+        cursor.execute("""
+        CREATE TABLE IF NOT EXISTS wishlist (
+            id SERIAL PRIMARY KEY,
+            user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+            saree_id INTEGER REFERENCES sarees(id) ON DELETE CASCADE,
+            UNIQUE(user_id, saree_id)
+            )
+        """)
         connection.commit()
         print("Database migration completed successfully.")
     except Exception as e:
@@ -54,6 +62,7 @@ def initialize_database():
         if cursor:
             cursor.close()
         if connection:
+            
             connection.close()
 initialize_database()
 # -----------------------------
@@ -1373,7 +1382,105 @@ def admin_database():
         order_items=order_items,
         cart_items=cart_items
     )
+@app.route("/wishlist/toggle/<int:saree_id>", methods=["POST"])
+def toggle_wishlist(saree_id):
+    if "user_id" not in session:
+        return redirect(url_for("login"))
 
+    connection = None
+    cursor = None
+
+    try:
+        connection = get_db_connection()
+        cursor = connection.cursor()
+
+        cursor.execute("""
+            SELECT id
+            FROM wishlist
+            WHERE user_id = %s
+            AND saree_id = %s
+        """, (
+            session["user_id"],
+            saree_id
+        ))
+
+        existing = cursor.fetchone()
+
+        if existing:
+            cursor.execute("""
+                DELETE FROM wishlist
+                WHERE user_id = %s
+                AND saree_id = %s
+            """, (
+                session["user_id"],
+                saree_id
+            ))
+        else:
+            cursor.execute("""
+                INSERT INTO wishlist (user_id, saree_id)
+                VALUES (%s, %s)
+            """, (
+                session["user_id"],
+                saree_id
+            ))
+
+        connection.commit()
+
+    except Exception as e:
+        if connection:
+            connection.rollback()
+
+        print("WISHLIST ERROR:", str(e))
+
+    finally:
+        if cursor:
+            cursor.close()
+
+        if connection:
+            connection.close()
+
+    return redirect(request.referrer or url_for("catalog"))
+
+@app.route("/wishlist")
+def wishlist():
+    if "user_id" not in session:
+        return redirect(url_for("login"))
+
+    connection = None
+    cursor = None
+
+    try:
+        connection = get_db_connection()
+        cursor = connection.cursor(cursor_factory=RealDictCursor)
+
+        cursor.execute("""
+            SELECT sarees.*
+            FROM wishlist
+            JOIN sarees
+            ON wishlist.saree_id = sarees.id
+            WHERE wishlist.user_id = %s
+            ORDER BY wishlist.id DESC
+        """, (
+            session["user_id"],
+        ))
+
+        sarees = cursor.fetchall()
+
+        return render_template(
+            "wishlist.html",
+            sarees=sarees
+        )
+
+    except Exception as e:
+        print("WISHLIST PAGE ERROR:", str(e))
+        return "Unable to load wishlist."
+
+    finally:
+        if cursor:
+            cursor.close()
+
+        if connection:
+            connection.close()
 # -----------------------------
 # RUN APPLICATION
 # -----------------------------
