@@ -45,40 +45,70 @@ Checkout - Digital Saree
 
         </div>
 
-
         <div class="address-section">
 
             <h2>Delivery Address</h2>
 
             <form method="POST">
 
-               <label>Full Delivery Address</label>
+                <label>Full Delivery Address</label>
+
                 <textarea name="address" placeholder="Enter your complete delivery address" required></textarea>
 
                 <h2>Payment Details</h2>
 
-                <div class="payment-option">
-                    <label>
-                        <input type="radio" name="payment_method" value="Cash on Delivery" required>
-                        Cash on Delivery
-                    </label>
-                </div>
+                <button type="button" class="payment-details-btn" onclick="showPaymentOptions()">
+                    Payment Details
+                </button>
 
-                <div class="payment-option">
-                    <label>
-                        <input type="radio" name="payment_method" value="UPI">
-                        UPI
-                    </label>
-                </div>
+                <div id="payment-options" style="display:none;">
 
-                <div class="payment-option">
-                    <label>
-                        <input type="radio" name="payment_method" value="Credit/Debit Card">
-                        Credit/Debit Card
-                    </label>
+                    <div class="payment-option">
+                        <label>
+                            <input type="radio" name="payment_method" value="UPI" required>
+                            UPI
+                        </label>
+                    </div>
+
+                    <div class="payment-option">
+                        <label>
+                            <input type="radio" name="payment_method" value="Google Pay">
+                            Google Pay
+                        </label>
+                    </div>
+
+                    <div class="payment-option">
+                        <label>
+                            <input type="radio" name="payment_method" value="PhonePe">
+                            PhonePe
+                        </label>
+                    </div>
+
+                    <div class="payment-option">
+                        <label>
+                            <input type="radio" name="payment_method" value="Paytm">
+                            Paytm
+                        </label>
+                    </div>
+
+                    <div class="payment-option">
+                        <label>
+                            <input type="radio" name="payment_method" value="Credit/Debit Card">
+                            Credit/Debit Card
+                        </label>
+                    </div>
+
+                    <div class="payment-option">
+                        <label>
+                            <input type="radio" name="payment_method" value="Cash on Delivery">
+                            Cash on Delivery
+                        </label>
+                    </div>
+
                 </div>
 
                 <button type="submit">Place Order</button>
+
             </form>
 
         </div>
@@ -86,5 +116,11 @@ Checkout - Digital Saree
     </div>
 
 </section>
+
+<script>
+function showPaymentOptions() {
+    document.getElementById("payment-options").style.display = "block";
+}
+</script>
 
 {% endblock %}
