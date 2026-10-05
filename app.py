@@ -37,6 +37,14 @@ def initialize_database():
             ALTER TABLE orders
             ADD COLUMN IF NOT EXISTS payment_status TEXT DEFAULT 'Pending'
         """)
+        cursor.execute("""
+        ALTER TABLE orders
+        ADD COLUMN IF NOT EXISTS return_reason TEXT
+        """)
+        cursor.execute("""
+            ALTER TABLE orders
+            ADD COLUMN IF NOT EXISTS return_status TEXT
+        """)
         connection.commit()
         print("Database migration completed successfully.")
     except Exception as e:
@@ -909,6 +917,87 @@ def cancel_order(order_id):
         print("================================")
 
         return "Unable to cancel order."
+
+    finally:
+        if cursor:
+            cursor.close()
+
+        if connection:
+            connection.close()
+# -----------------------------
+# RETURN ORDERS
+# -----------------------------
+@app.route("/return-order/<int:order_id>", methods=["POST"])
+def return_order(order_id):
+    if "user_id" not in session:
+        return redirect(url_for("login"))
+
+    return_reason = request.form.get("return_reason")
+
+    allowed_reasons = [
+        "Quality is not good.",
+        "Saree is damaged.",
+        "I did not like the colour or design."
+    ]
+
+    if return_reason not in allowed_reasons:
+        return "Invalid return reason."
+
+    connection = None
+    cursor = None
+
+    try:
+        connection = get_db_connection()
+        cursor = connection.cursor(cursor_factory=RealDictCursor)
+
+        cursor.execute("""
+            SELECT id, status, return_status
+            FROM orders
+            WHERE id = %s
+            AND user_id = %s
+        """, (
+            order_id,
+            session["user_id"]
+        ))
+
+        order = cursor.fetchone()
+
+        if not order:
+            return "Order not found!"
+
+        if order["status"] != "Delivered":
+            return "Only delivered orders can be returned."
+
+        if order["return_status"] == "Return Requested":
+            return "Return request already submitted."
+
+        cursor.execute("""
+            UPDATE orders
+            SET return_reason = %s,
+                return_status = 'Return Requested'
+            WHERE id = %s
+            AND user_id = %s
+            AND status = 'Delivered'
+        """, (
+            return_reason,
+            order_id,
+            session["user_id"]
+        ))
+
+        connection.commit()
+
+        return redirect(url_for("my_orders"))
+
+    except Exception as e:
+        if connection:
+            connection.rollback()
+
+        print("================================")
+        print("RETURN ORDER ERROR:")
+        print(str(e))
+        print("================================")
+
+        return "Unable to request return."
 
     finally:
         if cursor:

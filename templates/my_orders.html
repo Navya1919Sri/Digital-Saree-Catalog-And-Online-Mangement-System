@@ -1,127 +1,128 @@
 {% extends "base.html" %}
-
 {% block title %}
 My Orders - Digital Saree
 {% endblock %}
-
 {% block content %}
-
 <section class="orders-page">
-
     <h1>My Orders</h1>
-
     {% if orders %}
-
         <div class="orders-container">
-
             {% for order in orders %}
-
             <div class="order-card">
-
                 <div class="order-header">
-
                     <h2>
                         Order #{{ order["id"] }}
                     </h2>
-
                     <span class="order-status">
                         {{ order["status"] }}
                     </span>
-
                 </div>
-
-
                 <div class="ordered-items">
-
                     <h3>Items Ordered</h3>
-
                     {% for item in order_items[order["id"]] %}
-
                     <div class="ordered-item">
-
                         <div class="ordered-item-image">
-
                             {% if item["image"] %}
-
                                 <img
                                     src="{{ url_for('static', filename='images/' + item['image']) }}"
                                     alt="{{ item['name'] }}"
                                 >
-
                             {% else %}
-
                                 <span>No Image</span>
-
                             {% endif %}
-
                         </div>
-
-
                         <div class="ordered-item-info">
-
                             <h4>
                                 {{ item["name"] }}
                             </h4>
-
                             <p>
                                 Quantity:
                                 {{ item["quantity"] }}
                             </p>
-
                             <p>
                                 Price:
                                 ₹{{ item["price"] }}
                             </p>
-
                         </div>
-
                     </div>
-
                     {% endfor %}
-
                 </div>
-
-
                 <div class="order-details">
-
                     <p>
                         <strong>Total Amount:</strong>
                         ₹{{ order["total_amount"] }}
                     </p>
-
                     <p>
                         <strong>Delivery Address:</strong>
                         {{ order["delivery_address"] }}
                     </p>
-                    <form method="POST" action="{{ url_for('cancel_order', order_id=order.id) }}" onsubmit="return confirm('Are you sure you want to cancel this order?');">
-                    <button type="submit" class="cancel-order-btn" {% if order.status != "Pending" %}disabled{% endif %}>Cancel Order</button>
+                    {% if order["status"] == "Pending" %}
+                    <form method="POST" action="{{ url_for('cancel_order', order_id=order['id']) }}" onsubmit="return confirm('Are you sure you want to cancel this order?');">
+                        <button type="submit" class="cancel-order-btn">
+                            Cancel Order
+                        </button>
                     </form>
+                    {% endif %}
+                    {% if order["status"] == "Delivered" and order["return_status"] != "Return Requested" %
+                    <button type="button" class="return-order-btn" data-order-id="{{ order['id'] }}" onclick="showReturnOptions(this)">
+                        Return Order
+                    </button>
+                    <div id="return-options-{{ order['id'] }}" class="return-options" style="display: none;">
+                        <h3>Select Return Reason</h3>
+                        <form method="POST" action="{{ url_for('return_order', order_id=order['id']) }}">
+                            <label>
+                                <input type="radio" name="return_reason" value="Quality is not good." required>
+                                Quality is not good.
+                            </label>
+                            <label>
+                                <input type="radio" name="return_reason" value="Saree is damaged.">
+                                Saree is damaged.
+                            </label>
+                            <label>
+                                <input type="radio" name="return_reason" value="I did not like the colour or design.">
+                                I did not like the colour or design.
+                            </label>
+                            <button type="submit" class="submit-return-btn">
+                                Submit Return Request
+                            </button>
+                        </form>
+                    </div>
+                    {% endif %}
+                    {% if order["return_status"] == "Return Requested" %}
+                    <div class="return-requested">
+                        <p>
+                            <strong>Return Requested</strong>
+                        </p>
+                        <p>
+                            <strong>Return Reason:</strong>
+                            {{ order["return_reason"] }}
+                        </p>
+                    </div>
+                    {% endif %}
                 </div>
-
             </div>
-
             {% endfor %}
-
         </div>
-
     {% else %}
-
         <div class="no-orders">
-
             <h2>No Orders Yet</h2>
-
             <p>
                 You haven't placed any orders yet.
             </p>
-
             <a href="/catalog" class="btn">
                 Browse Sarees
             </a>
-
         </div>
-        
     {% endif %}
-
 </section>
-
+<script>
+function showReturnOptions(orderId) {
+    const returnOptions = document.getElementById("return-options-" + orderId);
+    if (returnOptions.style.display === "none") {
+        returnOptions.style.display = "block";
+    } else {
+        returnOptions.style.display = "none";
+    }
+}
+</script>
 {% endblock %}
