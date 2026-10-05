@@ -10,38 +10,78 @@ My Wishlist - Digital Saree
 
 <h1>My Wishlist</h1>
 
+<p class="wishlist-subtitle">
+Sarees you have liked.
+</p>
+
 {% if sarees %}
 
-<div class="saree-grid">
+<div class="wishlist-container">
 
 {% for saree in sarees %}
 
-<div class="saree-card">
+<div class="wishlist-card">
+
+<div class="wishlist-image">
 
 {% if saree["image"] %}
+
 <img
 src="{{ url_for('static', filename='images/' + saree['image']) }}"
 alt="{{ saree['name'] }}"
 >
+
 {% endif %}
+
+</div>
+
+<div class="wishlist-info">
 
 <h3>
 {{ saree["name"] }}
 </h3>
 
 <p>
+Category:
+{{ saree["category"] }}
+</p>
+
+<p>
+Fabric:
+{{ saree["fabric"] }}
+</p>
+
+<p class="wishlist-price">
 ₹{{ saree["price"] }}
 </p>
 
-<a href="{{ url_for('saree_details', saree_id=saree['id']) }}">
+<div class="wishlist-actions">
+
+<a
+href="{{ url_for('saree_details', saree_id=saree['id']) }}"
+class="wishlist-view-btn"
+>
 View Saree
 </a>
 
-<form method="POST" action="{{ url_for('toggle_wishlist', saree_id=saree['id']) }}">
-<button type="submit">
-♥ Remove from Wishlist
+<form
+method="POST"
+action="{{ url_for('toggle_wishlist', saree_id=saree['id']) }}"
+class="wishlist-remove-form"
+>
+
+<button
+type="submit"
+class="wishlist-remove-btn"
+>
+♥ Remove
 </button>
+
 </form>
+
+</div>
+
+</div>
 
 </div>
 
@@ -51,15 +91,24 @@ View Saree
 
 {% else %}
 
-<h2 align="center">Your wishlist is empty.</h2>
+<div class="empty-wishlist">
 
-<p align="center>
+<h2>
+Your Wishlist is Empty
+</h2>
+
+<p>
 You haven't liked any sarees yet.
 </p>
 
-<a href="{{ url_for('catalog') }}" align="center>
+<a
+href="{{ url_for('catalog') }}"
+class="btn"
+>
 Browse Sarees
 </a>
+
+</div>
 
 {% endif %}
 
