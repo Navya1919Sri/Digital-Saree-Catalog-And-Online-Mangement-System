@@ -19,7 +19,7 @@ os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 # -----------------------------
 def get_db_connection():
     connection = psycopg2.connect(
-        os.environ["DATABASE_URL"]
+        os.environ.get("DATABASE_URL")
     )
     return connection
 
