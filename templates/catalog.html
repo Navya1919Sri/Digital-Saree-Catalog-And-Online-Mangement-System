@@ -115,14 +115,23 @@ Saree Catalog - Digital Saree
                     Stock:
                     {{ saree["stock"] }}
                 </p>
+                
+                <div class="btn-group">
+                    <a
+                        href="/saree/{{ saree['id'] }}"
+                        class="btn"
+                    >
+                        View Details
+                    </a>
 
-                <a
-                    href="/saree/{{ saree['id'] }}"
-                    class="btn"
-                >
-                    View Details
-                </a>
+                    <form action="/add-to-cart/{{ saree['id'] }}" method="POST">
+                        <input type="hidden" name="quantity" value="1">
+                        <button type="submit" class="btn-cart">
+                            Add to Cart
+                        </button>
+                    </form>
 
+                </div>
             </div>
 
         </div>
