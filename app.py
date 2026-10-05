@@ -22,7 +22,6 @@ def get_db_connection():
         os.environ.get("DATABASE_URL")
     )
     return connection
-
 def initialize_database():
     connection = None
     cursor = None
@@ -38,8 +37,8 @@ def initialize_database():
             ADD COLUMN IF NOT EXISTS payment_status TEXT DEFAULT 'Pending'
         """)
         cursor.execute("""
-        ALTER TABLE orders
-        ADD COLUMN IF NOT EXISTS return_reason TEXT
+            ALTER TABLE orders
+            ADD COLUMN IF NOT EXISTS return_reason TEXT
         """)
         cursor.execute("""
             ALTER TABLE orders
@@ -56,9 +55,7 @@ def initialize_database():
             cursor.close()
         if connection:
             connection.close()
-
 initialize_database()
-
 # -----------------------------
 # HOME PAGE
 # -----------------------------
