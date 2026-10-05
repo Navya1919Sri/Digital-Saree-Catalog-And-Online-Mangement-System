@@ -63,8 +63,8 @@ My Orders - Digital Saree
                         </button>
                     </form>
                     {% endif %}
-                    {% if order["status"] == "Delivered" and order["return_status"] != "Return Requested" %
-                    <button type="button" class="return-order-btn" data-order-id="{{ order['id'] }}" onclick="showReturnOptions(this)">
+                    {% if order["status"] == "Delivered" and order["return_status"] != "Return Requested" %}
+                    <button type="button" class="return-order-btn" onclick="showReturnOptions({{ order['id'] }})">
                         Return Order
                     </button>
                     <div id="return-options-{{ order['id'] }}" class="return-options" style="display: none;">
