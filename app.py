@@ -831,7 +831,91 @@ def my_orders():
         orders=orders,
         order_items=order_items
     )
+# -----------------------------
+# CANCEL ORDERS
+# -----------------------------
+@app.route("/cancel-order/<int:order_id>", methods=["POST"])
+def cancel_order(order_id):
+    if "user_id" not in session:
+        return redirect(url_for("login"))
 
+    connection = None
+    cursor = None
+
+    try:
+        connection = get_db_connection()
+        cursor = connection.cursor(cursor_factory=RealDictCursor)
+
+        cursor.execute("""
+            SELECT id, status
+            FROM orders
+            WHERE id = %s
+            AND user_id = %s
+        """, (
+            order_id,
+            session["user_id"]
+        ))
+
+        order = cursor.fetchone()
+
+        if not order:
+            return "Order not found!"
+
+        if order["status"] != "Pending":
+            return "This order cannot be cancelled."
+
+        cursor.execute("""
+            SELECT saree_id, quantity
+            FROM order_items
+            WHERE order_id = %s
+        """, (
+            order_id,
+        ))
+
+        items = cursor.fetchall()
+
+        for item in items:
+            cursor.execute("""
+                UPDATE sarees
+                SET stock = stock + %s
+                WHERE id = %s
+            """, (
+                item["quantity"],
+                item["saree_id"]
+            ))
+
+        cursor.execute("""
+            UPDATE orders
+            SET status = 'Cancelled'
+            WHERE id = %s
+            AND user_id = %s
+            AND status = 'Pending'
+        """, (
+            order_id,
+            session["user_id"]
+        ))
+
+        connection.commit()
+
+        return redirect(url_for("my_orders"))
+
+    except Exception as e:
+        if connection:
+            connection.rollback()
+
+        print("================================")
+        print("CANCEL ORDER ERROR:")
+        print(str(e))
+        print("================================")
+
+        return "Unable to cancel order."
+
+    finally:
+        if cursor:
+            cursor.close()
+
+        if connection:
+            connection.close()
 # -----------------------------
 # ADMIN - MANAGE SAREES
 # -----------------------------
