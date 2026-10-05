@@ -1,98 +1,107 @@
 {% extends "base.html" %}
-
 {% block title %}
 Payment Details - Digital Saree
 {% endblock %}
-
 {% block content %}
-
 <section class="checkout-page">
-
-    <h1>Payment Details</h1>
-
-    <div class="address-section">
-
-        <form method="POST">
-
-            <h2>Select Payment Method</h2>
-
-            <div class="payment-option">
-                <label>
-                    <input type="radio" name="payment_method" value="UPI" onclick="hideScanner()" required>
-                    UPI
-                </label>
-            </div>
-
-            <div class="payment-option">
-                <label>
-                    <input type="radio" name="payment_method" value="Google Pay" onclick="showScanner('Google Pay')">
-                    Google Pay
-                </label>
-            </div>
-
-            <div class="payment-option">
-                <label>
-                    <input type="radio" name="payment_method" value="PhonePe" onclick="showScanner('PhonePe')">
-                    PhonePe
-                </label>
-            </div>
-
-            <div class="payment-option">
-                <label>
-                    <input type="radio" name="payment_method" value="Paytm" onclick="showScanner('Paytm')">
-                    Paytm
-                </label>
-            </div>
-
-            <div class="payment-option">
-                <label>
-                    <input type="radio" name="payment_method" value="Credit/Debit Card" onclick="hideScanner()">
-                    Credit/Debit Card
-                </label>
-            </div>
-
-            <div class="payment-option">
-                <label>
-                    <input type="radio" name="payment_method" value="Cash on Delivery" onclick="hideScanner()">
-                    Cash on Delivery
-                </label>
-            </div>
-
-            <div id="scanner" style="display:none;text-align:center;margin-top:20px;">
-
-                <h3 id="scanner-title"></h3>
-
-                <img id="scanner-image"
-                     src="{{ url_for('static', filename='images/demo-qr.png') }}"
-                     width="250"
-                     height="250">
-
-                <p>Open the selected payment app and scan this demo QR code.</p>
-
-            </div>
-
-            <button type="submit">Place Order</button>
-
-        </form>
-
-    </div>
-
+<h1>Payment Details</h1>
+<div class="address-section">
+<form method="POST">
+<h2>Select Payment Method</h2>
+<div class="payment-option">
+<label>
+<input type="radio" name="payment_method" value="UPI" onclick="showScanner('UPI')" required>
+UPI
+</label>
+</div>
+<div class="payment-option">
+<label>
+<input type="radio" name="payment_method" value="Google Pay" onclick="showScanner('Google Pay')">
+Google Pay
+</label>
+</div>
+<div class="payment-option">
+<label>
+<input type="radio" name="payment_method" value="PhonePe" onclick="showScanner('PhonePe')">
+PhonePe
+</label>
+</div>
+<div class="payment-option">
+<label>
+<input type="radio" name="payment_method" value="Paytm" onclick="showScanner('Paytm')">
+Paytm
+</label>
+</div>
+<div class="payment-option">
+<label>
+<input type="radio" name="payment_method" value="Credit/Debit Card" onclick="showCardDetails()">
+Credit/Debit Card
+</label>
+</div>
+<div class="payment-option">
+<label>
+<input type="radio" name="payment_method" value="Cash on Delivery" onclick="hideScanner()">
+Cash on Delivery
+</label>
+</div>
+<div id="scanner" style="display:none;text-align:center;margin-top:20px;">
+<h3 id="scanner-title"></h3>
+<img id="scanner-image"
+src="{{ url_for('static', filename='images/demo-qr.png') }}"
+width="250"
+height="250">
+<p>Scan this QR code using any UPI payment app.</p>
+<p><strong>UPI URI:</strong> <span id="upi-uri"></span></p>
+</div>
+<div id="card-details" style="display:none;margin-top:20px;">
+<h3>Card Details</h3>
+<div class="payment-option">
+<label for="card-name">Name on Card</label>
+<input type="text" id="card-name" name="card_name" placeholder="Enter name on card">
+</div>
+<div class="payment-option">
+<label for="card-number">Card Number</label>
+<input type="text" id="card-number" name="card_number" placeholder="1234 5678 9012 3456" maxlength="19">
+</div>
+<div class="payment-option">
+<label for="expiry-date">Expiry Date (MM/YY)</label>
+<input type="text" id="expiry-date" name="expiry_date" placeholder="MM/YY" maxlength="5">
+</div>
+<div class="payment-option">
+<label for="nickname">Nickname</label>
+<select id="nickname" name="card_nickname">
+<option value="">Select</option>
+<option value="Personal">Personal</option>
+<option value="Business">Business</option>
+<option value="Others">Others</option>
+</select>
+</div>
+</div>
+<button type="submit">Place Order</button>
+</form>
+</div>
 </section>
-
 <script>
 function showScanner(method) {
-    document.getElementById("scanner").style.display = "block";
-
-    document.getElementById("scanner-title").innerText =
-        "Scan with " + method;
-
-    document.getElementById("scanner-image").src =
-        "{{ url_for('static', filename='images/demo-qr.png') }}";
+document.getElementById("scanner").style.display="block";
+document.getElementById("card-details").style.display="none";
+document.getElementById("scanner-title").innerText="Scan with "+method;
+document.getElementById("scanner-image").src="{{ url_for('static', filename='images/demo-qr.png') }}";
+if(method==="UPI"){
+document.getElementById("upi-uri").innerText="upi://pay?pa=yourupi@bank&pn=Digital%20Saree&am={{ total }}&cu=INR";
+}else{
+document.getElementById("upi-uri").innerText="";
 }
-
+}
+function showCardDetails() {
+document.getElementById("scanner").style.display="none";
+document.getElementById("card-details").style.display="block";
+document.getElementById("upi-uri").innerText="";
+}
 function hideScanner() {
-    document.getElementById("scanner").style.display = "none";
+document.getElementById("scanner").style.display="none";
+document.getElementById("card-details").style.display="none";
+document.getElementById("upi-uri").innerText="";
 }
 </script>
-
 {% endblock %}

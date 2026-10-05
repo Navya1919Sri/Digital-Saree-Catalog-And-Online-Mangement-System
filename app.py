@@ -33,6 +33,10 @@ def initialize_database():
             ALTER TABLE orders
             ADD COLUMN IF NOT EXISTS payment_method TEXT
         """)
+        cursor.execute("""
+            ALTER TABLE orders
+            ADD COLUMN IF NOT EXISTS payment_status TEXT DEFAULT 'Pending'
+        """)
         connection.commit()
         print("Database migration completed successfully.")
     except Exception as e:
@@ -522,6 +526,9 @@ def payment():
 
             try:
                 # Create order
+                # Create order
+                payment_status = "Pending" if payment_method == "Cash on Delivery" else "Successful"
+
                 cursor.execute("""
                     INSERT INTO orders
                     (
@@ -529,18 +536,19 @@ def payment():
                         total_amount,
                         status,
                         delivery_address,
-                        payment_method
+                        payment_method,
+                        payment_status
                     )
-                    VALUES (%s, %s, %s, %s, %s)
+                    VALUES (%s, %s, %s, %s, %s, %s)
                     RETURNING id
                 """, (
                     session["user_id"],
                     total,
                     "Pending",
                     delivery_address,
-                    payment_method
+                    payment_method,
+                    payment_status
                 ))
-
                 order = cursor.fetchone()
 
                 if not order:
