@@ -52,6 +52,17 @@ alt="{{ saree['name'] }}"
 Saree Image
 </div>
 {% endif %}
+{% if session.get("user_id") %}
+<form method="POST" action="{{ url_for('toggle_wishlist', saree_id=saree['id']) }}" class="wishlist-form">
+<button type="submit" class="wishlist-icon" title="Like this saree">
+{% if saree['id'] in wishlist_ids %}
+♥
+{% else %}
+♡
+{% endif %}
+</button>
+</form>
+{% endif %}
 </div>
 <div class="saree-info">
 <h3>
@@ -85,19 +96,6 @@ View Details
 Add to Cart
 </button>
 </form>
-</div>
-<div class="wishlist-button-container">
-{% if session.get("user_id") %}
-<form method="POST" action="{{ url_for('toggle_wishlist', saree_id=saree['id']) }}">
-<button type="submit" class="wishlist-btn">
-{% if saree['id'] in wishlist_ids %}
-♥ Liked
-{% else %}
-♡ Like
-{% endif %}
-</button>
-</form>
-{% endif %}
 </div>
 </div>
 </div>
