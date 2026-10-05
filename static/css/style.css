@@ -1641,3 +1641,23 @@ footer {
     color: #8f1538;
     font-weight: 600;
 }
+.wishlist-button-container {
+    margin-top: 10px;
+}
+
+.wishlist-btn {
+    width: 100%;
+    padding: 10px;
+    background: white;
+    color: #8f1538;
+    border: 1px solid #8f1538;
+    border-radius: 6px;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.wishlist-btn:hover {
+    background: #8f1538;
+    color: white;
+}
