@@ -1470,3 +1470,35 @@ footer {
 .payment-option input {
     margin-right: 10px;
 }
+.address-section button {
+    width: 100%;
+    padding: 14px;
+    margin-top: 20px;
+    background-color: #8b1e3f;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    font-size: 17px;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+.address-section button:hover {
+    background-color: #6f1732;
+}
+.address-section button {
+    width: 100%;
+    padding: 14px;
+    margin-top: 20px;
+    background-color: #8b1e3f;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    font-size: 17px;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+.address-section button:hover {
+    background-color: #6f1732;
+}
